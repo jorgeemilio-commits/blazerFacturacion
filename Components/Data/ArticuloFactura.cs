@@ -2,7 +2,9 @@
 {
     public class ArticuloFactura
     {
-        public int IdProducto { get; set; }
+        public Guid ArticuloId { get; set; } = Guid.NewGuid();
+        public string Nombre { get; set; } = string.Empty;
+
         public int Cantidad { get; set; } = 1;
         public decimal PrecioUnitario { get; set; } = 0;
 
