@@ -1,4 +1,4 @@
-﻿using blazerFacturacion.Data;
+﻿using blazerFacturacion.Components.Data;
 using System.Collections.Generic;
 
 namespace blazerFacturacion.Components.Servicios
