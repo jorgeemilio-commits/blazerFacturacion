@@ -2,9 +2,9 @@
 {
     public class ArticuloFactura
     {
-        public int Id { get; set; }
-        public int Cantidad { get; set; }
-        public decimal PrecioUnitario { get; set; }
+        public int IdProducto { get; set; }
+        public int Cantidad { get; set; } = 1;
+        public decimal PrecioUnitario { get; set; } = 0;
 
         public decimal Total => Cantidad * PrecioUnitario;
 
