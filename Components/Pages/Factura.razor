@@ -1,5 +1,110 @@
-﻿<h3>Factura</h3>
+﻿@page "/factura"
+@layout null @* Esto evita que se use el MainLayout.razor *@
+
+@inject ServicioFactura ServicioFactura
+@inject NavigationManager Navigation
+
+<main class="container">
+    <h3>Crear Nueva Factura</h3>
+
+    <EditForm Model="_factura" OnValidSubmit="GuardarFactura">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nombre del Cliente:</label>
+            <InputText class="form-control" @bind-Value="_factura.NombreCliente" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Fecha de la Factura:</label>
+            <InputDate class="form-control" @bind-Value="_factura.Fecha" />
+        </div>
+
+        <hr />
+        <h4>Agregar Artículos</h4>
+
+        <div class="row g-3">
+            <div class="col-md-5">
+                <label>ID Producto:</label>
+                <InputNumber class="form-control" @bind-Value="_nuevoArticulo.IdProducto" />
+            </div>
+            <div class="col-md-2">
+                <label>Cantidad:</label>
+                <InputNumber class="form-control" @bind-Value="_nuevoArticulo.Cantidad" />
+            </div>
+            <div class="col-md-3">
+                <label>Precio Unitario:</label>
+                @* Usando la propiedad de tu modelo ArticuloFactura.cs *@
+                <InputNumber class="form-control" @bind-Value="_nuevoArticulo.PrecioUnitario" />
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-secondary w-100" @onclick="AgregarArticulo">Agregar</button>
+            </div>
+        </div>
+
+        <hr />
+        <h4>Artículos en la Factura</h4>
+        @if (_factura.Articulos.Any())
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var art in _factura.Articulos)
+                    {
+                        <tr>
+                            <td>@art.IdProducto</td>
+                            <td>@art.Cantidad</td>
+                            <td>@art.PrecioUnitario.ToString("C")</td>
+                            @* Usando la propiedad Total de tu modelo ArticuloFactura.cs *@
+                            <td>@art.Total.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>Aún no hay artículos agregados.</p>
+        }
+
+        <div class="text-end">
+            @* Usando la propiedad Total de tu modelo Factura.cs *@
+            <h3>Total: @_factura.Total.ToString("C")</h3>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar Factura</button>
+
+    </EditForm>
+</main>
+@* FIN: Contenido de la página *@
+
 
 @code {
+    private Factura _factura = new Factura();
+    private ArticuloFactura _nuevoArticulo = new ArticuloFactura();
 
+    private void AgregarArticulo()
+    {
+        // Validamos usando la propiedad PrecioUnitario
+        if (_nuevoArticulo.IdProducto > 0 && _nuevoArticulo.PrecioUnitario > 0 && _nuevoArticulo.Cantidad > 0)
+        {
+            _factura.Articulos.Add(_nuevoArticulo);
+            _nuevoArticulo = new ArticuloFactura();
+        }
+    }
+
+    private void GuardarFactura()
+    {
+        ServicioFactura.AgregarFactura(_factura);
+        _factura = new Factura();
+        _nuevoArticulo = new ArticuloFactura();
+    }
 }

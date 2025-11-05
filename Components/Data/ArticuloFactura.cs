@@ -6,7 +6,7 @@
         public int Cantidad { get; set; } = 1;
         public decimal PrecioUnitario { get; set; } = 0;
 
-        public decimal Total => Cantidad * PrecioUnitario;
+        public decimal Total { get { return Cantidad * PrecioUnitario; } }
 
     }
 }
