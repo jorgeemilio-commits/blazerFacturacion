@@ -1,13 +1,19 @@
 using blazerFacturacion.Components;
 using blazerFacturacion.Components.Servicios;
+using blazerFacturacion.Components.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<FacturaDbContexto>(options => options.UseSqlite(connectionString));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddSingleton<ServicioFactura>();
+builder.Services.AddScoped<ServicioFactura>();
 
 var app = builder.Build();
 

@@ -1,25 +1,32 @@
 ﻿using blazerFacturacion.Components.Data;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Threading.Tasks; 
 
 namespace blazerFacturacion.Components.Servicios
 {
     public class ServicioFactura
     {
-        // Setter
-        private readonly List<Factura> _facturas = new List<Factura>();
+        private readonly FacturaDbContexto _contexto;
 
-        // Getter
-        public List<Factura> GetFacturas()
+        public ServicioFactura(FacturaDbContexto contexto)
         {
-            return _facturas;
+            _contexto = contexto;
         }
 
-        // Agregar factura
-        public void AgregarFactura(Factura nuevaFactura)
+        public async Task<List<Factura>> GetFacturasAsync()
+        {
+            return await _contexto.Facturas
+                                 .Include(f => f.Articulos)
+                                 .ToListAsync();
+        }
+
+        public async Task AgregarFacturaAsync(Factura nuevaFactura)
         {
             if (nuevaFactura != null)
             {
-                _facturas.Add(nuevaFactura);
+                _contexto.Facturas.Add(nuevaFactura);
+                await _contexto.SaveChangesAsync();
             }
         }
     }

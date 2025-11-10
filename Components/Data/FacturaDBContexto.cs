@@ -9,13 +9,11 @@ namespace blazerFacturacion.Components.Data
         {
         }
 
-        // tablas en la base de datos
+        // La tabla 'Facturas' usa la clase 'Factura'
         public DbSet<Factura> Facturas { get; set; }
+
+        // La tabla 'ArticulosFactura' usa la clase 'ArticuloFactura'
         public DbSet<ArticuloFactura> ArticulosFactura { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-
-        }
     }
 }
