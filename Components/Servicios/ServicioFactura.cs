@@ -37,5 +37,34 @@ namespace blazerFacturacion.Components.Servicios
                 await _contexto.SaveChangesAsync();
             }
         }
+
+        // actualiza el articulo con su version modificada
+        public async Task ActualizarArticuloAsync(ArticuloFactura articuloModificado)
+        {
+            var articuloExistente = await _contexto.ArticulosFactura.FindAsync(articuloModificado.ArticuloId);
+
+            if (articuloExistente != null)
+            {
+                // actualiza las propiedades del articulo
+                articuloExistente.Nombre = articuloModificado.Nombre;
+                articuloExistente.Cantidad = articuloModificado.Cantidad;
+                articuloExistente.PrecioUnitario = articuloModificado.PrecioUnitario;
+
+                await _contexto.SaveChangesAsync();
+            }
+        }
+
+        // elimina el articulo seleccionado
+        public async Task EliminarArticuloAsync(Guid articuloId)
+        {
+            var articuloAEliminar = await _contexto.ArticulosFactura.FindAsync(articuloId);
+
+            if (articuloAEliminar != null)
+            {
+                // elimina ese articula
+                _contexto.ArticulosFactura.Remove(articuloAEliminar);
+                await _contexto.SaveChangesAsync();
+            }
+        }
     }
 }

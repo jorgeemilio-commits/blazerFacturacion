@@ -1,7 +1,7 @@
 ﻿@page "/factura"
 @rendermode InteractiveServer
-
 @inject ServicioFactura ServicioFactura
+@inject ServicioEstadoUsuario EstadoUsuario
 
 <main class="container">
     <h3>Facturación en Tiempo Real</h3>
@@ -83,19 +83,30 @@
 </main>
 
 @code {
-    // Ya no hay un objeto "_factura".
     private string _nombreCliente = string.Empty;
     private ArticuloFactura _nuevoArticulo = new ArticuloFactura();
     private List<ArticuloFactura> _articulosMostrados = new List<ArticuloFactura>();
     private string _mensajeErrorArticulo = string.Empty;
 
-    // Método para cargar la tabla
+    protected override async Task OnInitializedAsync()
+    {
+        _nombreCliente = EstadoUsuario.NombreClienteActual;
+
+        // carga la tabla si habia un nombre puesto antes
+        if (!string.IsNullOrWhiteSpace(_nombreCliente))
+        {
+            await CargarArticulos();
+        }
+    }
+
+    // carga la tabla
     private async Task CargarArticulos()
     {
+        EstadoUsuario.NombreClienteActual = _nombreCliente;
         _articulosMostrados = await ServicioFactura.GetArticulosPorClienteAsync(_nombreCliente);
     }
 
-    // booton agregar
+    // boton agregar
     private async Task AgregarArticulo()
     {
         _mensajeErrorArticulo = string.Empty;
