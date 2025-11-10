@@ -1,30 +1,23 @@
 ﻿@page "/factura"
 @rendermode InteractiveServer
 
-
 @inject ServicioFactura ServicioFactura
-@inject NavigationManager Navigation
 
 <main class="container">
-    <h3>Crear Nueva Factura</h3>
+    <h3>Facturación en Tiempo Real</h3>
 
-    <EditForm Model="_factura" OnValidSubmit="GuardarFactura" FormName="FacturaForm">
+    <div class="mb-3">
+        <label class="form-label">Nombre del Cliente:</label>
+        <InputText class="form-control" @bind-Value="_nombreCliente" placeholder="Escriba un nombre para ver o agregar artículos..." />
+        <button class="btn btn-info mt-2" @onclick="CargarArticulos">Cargar Artículos</button>
+    </div>
+
+    <hr />
+
+    <h4>Agregar Artículos</h4>
+    <EditForm Model="_nuevoArticulo" OnValidSubmit="AgregarArticulo" FormName="ArticuloForm">
         <DataAnnotationsValidator />
         <ValidationSummary />
-
-        <div class="mb-3">
-            <label class="form-label">Nombre del Cliente:</label>
-            <InputText class="form-control" @bind-Value="_factura.NombreCliente" />
-        </div>
-
-       
- <div class="mb-3">
-            <label class="form-label">Fecha de la Factura:</label>
-            <InputDate class="form-control" @bind-Value="_factura.Fecha" />
-        </div>
-
-        <hr />
-        <h4>Agregar Artículos</h4>
 
         <div class="row g-3">
             <div class="col-md-5">
@@ -33,80 +26,87 @@
             </div>
             <div class="col-md-2">
                 <label>Cantidad:</label>
-    <InputNumber class="form-control" @bind-Value="_nuevoArticulo.Cantidad" />
+                <InputNumber class="form-control" @bind-Value="_nuevoArticulo.Cantidad" />
             </div>
-          
-  <div class="col-md-3">
+            <div class="col-md-3">
                 <label>Precio Unitario:</label>
                 <InputNumber class="form-control" @bind-Value="_nuevoArticulo.PrecioUnitario" />
             </div>
             <div class="col-md-2 d-flex align-items-end">
-          
-      <button type="button" class="btn btn-secondary w-100" @onclick="AgregarArticulo">Agregar</button>
+                <button type="submit" class="btn btn-secondary w-100">Agregar</button>
             </div>
         </div>
-
         @if (!string.IsNullOrEmpty(_mensajeErrorArticulo))
         {
-            <div class="row">
-                <div class="col-12">
-                    <p class="text-danger mt-2">@_mensajeErrorArticulo</p>
-                </div>
-            </div>
+            <p class="text-danger mt-2">@_mensajeErrorArticulo</p>
         }
-
-        <hr />
-        <h4>Artículos en la Factura</h4>
-        @if (_factura.Articulos.Any())
-        {
-            <table class="table">
-                <thead>
-        <tr>
-                        <th>ID Artículo</th>
-                        <th>Nombre</th>
-                        <th>Cantidad</th>
-                        <th>Precio Unitario</th>
-                <th>Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var art in _factura.Articulos)
-            {
-                        <tr>
-                            <td>@art.ArticuloId.ToString().Substring(0, 8)</td>
-                            <td>@art.Nombre</td>
-                            <td>@art.Cantidad</td>
-                    <td>@art.PrecioUnitario.ToString("C")</td>
-                            <td>@art.Total.ToString("C")</td>
-           </tr>
-                    }
-                </tbody>
-            </table>
-        }
-        else
-        {
-            <p>Aún no hay artículos agregados.</p>
-   }
-
-        <div class="text-end">
-            <h3>Total: @_factura.Total.ToString("C")</h3>
-        </div>
-
     </EditForm>
+    
+    <hr />
+
+    <h4>Artículos de: @_nombreCliente</h4>
+    @if (_articulosMostrados.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID Artículo</th>
+                    <th>Nombre</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var art in _articulosMostrados)
+                {
+                    <tr>
+                        <td>@art.ArticuloId.ToString().Substring(0, 8)</td>
+                        <td>@art.Nombre</td>
+                        <td>@art.Cantidad</td>
+                        <td>@art.PrecioUnitario.ToString("C")</td>
+                        <td>@art.Total.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        
+        <div class="text-end">
+            <h3>Total: @_articulosMostrados.Sum(a => a.Total).ToString("C")</h3>
+        </div>
+    }
+    else
+    {
+        <p>No hay artículos para este cliente. ¡Agrega uno!</p>
+    }
+
 </main>
 
-
-
 @code {
-    private Factura _factura = new Factura();
-private ArticuloFactura _nuevoArticulo = new ArticuloFactura();
-    
+    // Ya no hay un objeto "_factura".
+    private string _nombreCliente = string.Empty;
+    private ArticuloFactura _nuevoArticulo = new ArticuloFactura();
+    private List<ArticuloFactura> _articulosMostrados = new List<ArticuloFactura>();
     private string _mensajeErrorArticulo = string.Empty;
 
-    private void AgregarArticulo()
+    // Método para cargar la tabla
+    private async Task CargarArticulos()
     {
+        _articulosMostrados = await ServicioFactura.GetArticulosPorClienteAsync(_nombreCliente);
+    }
 
-        if (string.IsNullOrWhiteSpace(_nuevoArticulo.Nombre))
+    // booton agregar
+    private async Task AgregarArticulo()
+    {
+        _mensajeErrorArticulo = string.Empty;
+
+        // checa condiciones para ver si es valido
+
+        if (string.IsNullOrWhiteSpace(_nombreCliente))
+        {
+            _mensajeErrorArticulo = "Debe ingresar un Nombre de Cliente primero.";
+        }
+        else if (string.IsNullOrWhiteSpace(_nuevoArticulo.Nombre))
         {
             _mensajeErrorArticulo = "Por favor, ingrese un nombre para el artículo.";
         }
@@ -120,18 +120,12 @@ private ArticuloFactura _nuevoArticulo = new ArticuloFactura();
         }
         else
         {
+            // si todo esta bien agrega a la base de datos y recarga la tabla
 
-            _mensajeErrorArticulo = string.Empty; 
-            _factura.Articulos.Add(_nuevoArticulo);
-   _nuevoArticulo = new ArticuloFactura();
+            _nuevoArticulo.NombreCliente = _nombreCliente;
+            await ServicioFactura.AgregarArticuloAsync(_nuevoArticulo);
+            _nuevoArticulo = new ArticuloFactura();
+            await CargarArticulos();
         }
-    }
-
-    private void GuardarFactura()
-    {
-        ServicioFactura.AgregarFactura(_factura);
-_factura = new Factura();
-        _nuevoArticulo = new ArticuloFactura();
-        _mensajeErrorArticulo = string.Empty;
     }
 }

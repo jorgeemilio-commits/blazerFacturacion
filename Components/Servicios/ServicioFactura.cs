@@ -1,7 +1,8 @@
 ﻿using blazerFacturacion.Components.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Threading.Tasks; 
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace blazerFacturacion.Components.Servicios
 {
@@ -14,18 +15,25 @@ namespace blazerFacturacion.Components.Servicios
             _contexto = contexto;
         }
 
-        public async Task<List<Factura>> GetFacturasAsync()
+        public async Task<List<ArticuloFactura>> GetArticulosPorClienteAsync(string nombreCliente)
         {
-            return await _contexto.Facturas
-                                 .Include(f => f.Articulos)
+            // checa si no esta vacio
+            if (string.IsNullOrWhiteSpace(nombreCliente))
+            {
+                return new List<ArticuloFactura>();
+            }
+
+            return await _contexto.ArticulosFactura
+                                 .Where(a => a.NombreCliente.ToLower() == nombreCliente.ToLower())
                                  .ToListAsync();
         }
 
-        public async Task AgregarFacturaAsync(Factura nuevaFactura)
+        // agrega un solo artículo a la BD
+        public async Task AgregarArticuloAsync(ArticuloFactura nuevoArticulo)
         {
-            if (nuevaFactura != null)
+            if (nuevoArticulo != null && !string.IsNullOrWhiteSpace(nuevoArticulo.NombreCliente))
             {
-                _contexto.Facturas.Add(nuevaFactura);
+                _contexto.ArticulosFactura.Add(nuevoArticulo);
                 await _contexto.SaveChangesAsync();
             }
         }
