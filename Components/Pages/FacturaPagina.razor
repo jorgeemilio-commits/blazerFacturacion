@@ -1,5 +1,6 @@
 ﻿@page "/factura"
 @rendermode InteractiveServer
+
 @inject ServicioFactura ServicioFactura
 @inject ServicioEstadoUsuario EstadoUsuario
 
@@ -14,8 +15,9 @@
 
     <hr />
 
-    <h4>Agregar Artículos</h4>
-    <EditForm Model="_nuevoArticulo" OnValidSubmit="AgregarArticulo" FormName="ArticuloForm">
+    <h4>@(_modoEdicion ? "Editando Artículo" : "Agregar Artículos")</h4>
+
+    <EditForm Model="_nuevoArticulo" OnValidSubmit="GuardarArticulo" FormName="ArticuloForm">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
@@ -32,8 +34,17 @@
                 <label>Precio Unitario:</label>
                 <InputNumber class="form-control" @bind-Value="_nuevoArticulo.PrecioUnitario" />
             </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-secondary w-100">Agregar</button>
+            
+            <div class="col-md-2 d-flex flex-column align-items-end justify-content-end">
+                @if (_modoEdicion)
+                {
+                    <button type="submit" class="btn btn-warning w-100">Actualizar</button>
+                    <button type="button" class="btn btn-secondary w-100 mt-1" @onclick="CancelarEdicion">Cancelar</button>
+                }
+                else
+                {
+                    <button type="submit" class="btn btn-primary w-100">Agregar</button>
+                }
             </div>
         </div>
         @if (!string.IsNullOrEmpty(_mensajeErrorArticulo))
@@ -47,25 +58,32 @@
     <h4>Artículos de: @_nombreCliente</h4>
     @if (_articulosMostrados.Any())
     {
-        <table class="table">
-            <thead>
+        <table class="table table-striped"> <thead>
                 <tr>
-                    <th>ID Artículo</th>
                     <th>Nombre</th>
                     <th>Cantidad</th>
                     <th>Precio Unitario</th>
                     <th>Subtotal</th>
-                </tr>
+                    <th>Editar</th> <th>Eliminar</th> </tr>
             </thead>
             <tbody>
                 @foreach (var art in _articulosMostrados)
                 {
                     <tr>
-                        <td>@art.ArticuloId.ToString().Substring(0, 8)</td>
                         <td>@art.Nombre</td>
                         <td>@art.Cantidad</td>
                         <td>@art.PrecioUnitario.ToString("C")</td>
                         <td>@art.Total.ToString("C")</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning" @onclick="() => IniciarEdicion(art)">
+                                Editar
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => IniciarEliminacion(art.ArticuloId)">
+                                Eliminar
+                            </button>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -79,20 +97,19 @@
     {
         <p>No hay artículos para este cliente. ¡Agrega uno!</p>
     }
-
 </main>
 
 @code {
-    private string _nombreCliente = string.Empty;
+   private string _nombreCliente = string.Empty;
     private ArticuloFactura _nuevoArticulo = new ArticuloFactura();
     private List<ArticuloFactura> _articulosMostrados = new List<ArticuloFactura>();
     private string _mensajeErrorArticulo = string.Empty;
+    
+    private bool _modoEdicion = false;
 
     protected override async Task OnInitializedAsync()
     {
         _nombreCliente = EstadoUsuario.NombreClienteActual;
-
-        // carga la tabla si habia un nombre puesto antes
         if (!string.IsNullOrWhiteSpace(_nombreCliente))
         {
             await CargarArticulos();
@@ -106,37 +123,66 @@
         _articulosMostrados = await ServicioFactura.GetArticulosPorClienteAsync(_nombreCliente);
     }
 
-    // boton agregar
-    private async Task AgregarArticulo()
+    // agrega o actualiza un articulo
+    private async Task GuardarArticulo()
     {
         _mensajeErrorArticulo = string.Empty;
 
-        // checa condiciones para ver si es valido
+        // valida el articulo
 
-        if (string.IsNullOrWhiteSpace(_nombreCliente))
+        if (string.IsNullOrWhiteSpace(_nombreCliente)) {
+            _mensajeErrorArticulo = "Debe ingresar un Nombre de Cliente primero."; return; }
+        if (string.IsNullOrWhiteSpace(_nuevoArticulo.Nombre)) {
+            _mensajeErrorArticulo = "Por favor, ingrese un nombre para el artículo."; return; }
+        if (_nuevoArticulo.Cantidad <= 0) {
+            _mensajeErrorArticulo = "La cantidad debe ser al menos 1."; return; }
+        if (_nuevoArticulo.PrecioUnitario < 0) {
+            _mensajeErrorArticulo = "El precio unitario no puede ser negativo."; return; }
+
+        if (_modoEdicion)
         {
-            _mensajeErrorArticulo = "Debe ingresar un Nombre de Cliente primero.";
-        }
-        else if (string.IsNullOrWhiteSpace(_nuevoArticulo.Nombre))
-        {
-            _mensajeErrorArticulo = "Por favor, ingrese un nombre para el artículo.";
-        }
-        else if (_nuevoArticulo.Cantidad <= 0)
-        {
-            _mensajeErrorArticulo = "La cantidad debe ser al menos 1.";
-        }
-        else if (_nuevoArticulo.PrecioUnitario < 0)
-        {
-            _mensajeErrorArticulo = "El precio unitario no puede ser negativo.";
+            // actualiza
+            await ServicioFactura.ActualizarArticuloAsync(_nuevoArticulo);
         }
         else
         {
-            // si todo esta bien agrega a la base de datos y recarga la tabla
-
+            // agrega
             _nuevoArticulo.NombreCliente = _nombreCliente;
             await ServicioFactura.AgregarArticuloAsync(_nuevoArticulo);
-            _nuevoArticulo = new ArticuloFactura();
-            await CargarArticulos();
         }
+
+        CancelarEdicion(); 
+        await CargarArticulos();
+    }
+
+    // carga el articulo en el modo de edicion
+    private void IniciarEdicion(ArticuloFactura articuloAEditar)
+    {
+        _nuevoArticulo = new ArticuloFactura
+        {
+            ArticuloId = articuloAEditar.ArticuloId,
+            NombreCliente = articuloAEditar.NombreCliente,
+            Nombre = articuloAEditar.Nombre,
+            Cantidad = articuloAEditar.Cantidad,
+            PrecioUnitario = articuloAEditar.PrecioUnitario
+        };
+        
+        _modoEdicion = true;
+        _mensajeErrorArticulo = string.Empty;
+    }
+
+    //cancela el modo edicion
+    private void CancelarEdicion()
+    {
+        _nuevoArticulo = new ArticuloFactura();
+        _modoEdicion = false;
+        _mensajeErrorArticulo = string.Empty;
+    }
+
+    // elimina un articulo
+    private async Task IniciarEliminacion(Guid articuloId)
+    {
+        await ServicioFactura.EliminarArticuloAsync(articuloId);
+        await CargarArticulos(); 
     }
 }
