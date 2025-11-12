@@ -14,7 +14,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddScoped<ServicioFactura>();
-builder.Services.AddScoped<ServicioEstadoUsuario>();
+builder.Services.AddScoped<ControladorFactura>();
 
 var app = builder.Build();
 

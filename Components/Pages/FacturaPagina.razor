@@ -2,165 +2,175 @@
 @rendermode InteractiveServer
 
 @inject ServicioFactura ServicioFactura
-@inject ServicioEstadoUsuario EstadoUsuario
+@inject ControladorFactura ControladorFactura
 
 <main class="container">
-    <h3>Facturación</h3>
-
-    <div class="mb-3">
-        <label class="form-label">Nombre del Cliente:</label>
-        <InputText class="form-control" @bind-Value="_nombreCliente" placeholder="Escriba un nombre para ver o agregar artículos..." />
-        <button class="btn btn-info mt-2" @onclick="CargarArticulos">Cargar Artículos</button>
-    </div>
-
-    <hr />
-
-    <h4>@(_modoEdicion ? "Editando Artículo" : "Agregar Artículos")</h4>
-
-   <EditForm Model="_nuevoArticulo" OnValidSubmit="GuardarArticulo" FormName="ArticuloForm">
-    <div class="row g-3">
-        <div class="col-md-4"> <label>Nombre del Artículo:</label>
-            <InputText class="form-control" @bind-Value="_nuevoArticulo.Nombre" />
-        </div>
-        <div class="col-md-3">
-            <label>Fecha:</label>
-            <InputDate class="form-control" @bind-Value="_nuevoArticulo.Fecha" />
-        </div>
-        <div class="col-md-1"> <label>Cantidad:</label>
-            <InputNumber class="form-control" @bind-Value="_nuevoArticulo.Cantidad" />
-        </div>
-        <div class="col-md-2"> <label>Precio Unitario:</label>
-            <InputNumber class="form-control" @bind-Value="_nuevoArticulo.PrecioUnitario" />
-        </div>
-        <div class="col-md-2 d-flex flex-column align-items-end justify-content-end">
-            </div>
-    </div>
-    </EditForm>
     
-    <hr />
-
-    <h4>Artículos de: @_nombreCliente</h4>
-    @if (_articulosMostrados.Any())
-    {
-        <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Fecha</th> <th>Nombre</th>
-                <th>Cantidad</th>
-                <th>Precio Unitario</th>
-                <th>Subtotal</th>
-                <th>Editar</th>
-                <th>Eliminar</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var art in _articulosMostrados)
-            {
-                <tr>
-                    <td>@art.Fecha.ToShortDateString()</td> <td>@art.Nombre</td>
-                    <td>@art.Cantidad</td>
-                    <td>@art.PrecioUnitario.ToString("C")</td>
-                    <td>@art.Total.ToString("C")</td>
-                    </tr>
-            }
-        </tbody>
-    </table>
+    <div class="border p-3 mb-4">
+        <h3>Crear Nueva Factura</h3>
         
-        <div class="text-end">
-            <h3>Total: @_articulosMostrados.Sum(a => a.Total).ToString("C")</h3>
-        </div>
-    }
-    else
-    {
-        <p>No hay artículos para este cliente. ¡Agrega uno!</p>
-    }
+        <EditForm Model="ControladorFactura.FacturaEnProgreso" OnValidSubmit="GuardarFacturaAsync" FormName="FacturaForm">
+            <DataAnnotationsValidator />
+            
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre del Cliente:</label>
+                    <InputText class="form-control" @bind-Value="ControladorFactura.FacturaEnProgreso.NombreCliente" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Fecha de la Factura:</label>
+                    <InputDate class="form-control" @bind-Value="ControladorFactura.FacturaEnProgreso.Fecha" />
+                </div>
+            </div>
+
+            <hr />
+            
+            <h4>@(_modoEdicion ? "Editando Artículo" : "Agregar Artículos")</h4>
+            
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label>Nombre del Artículo:</label>
+                    <InputText class="form-control" @bind-Value="_articuloTemporal.Nombre" />
+                </div>
+                <div class="col-md-2">
+                    <label>Cantidad:</label>
+                    <InputNumber class="form-control" @bind-Value="_articuloTemporal.Cantidad" />
+                </div>
+                <div class="col-md-3">
+                    <label>Precio Unitario:</label>
+                    <InputNumber class="form-control" @bind-Value="_articuloTemporal.PrecioUnitario" />
+                </div>
+                <div class="col-md-3 d-flex flex-column align-items-end justify-content-end">
+                    @if (_modoEdicion)
+                    {
+                        <button type="button" class="btn btn-warning w-100" @onclick="ActualizarArticuloLocal">Actualizar</button>
+                        <button type="button" class="btn btn-secondary w-100 mt-1" @onclick="CancelarEdicion">Cancelar</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-primary w-100" @onclick="AgregarArticuloLocal">Agregar</button>
+                    }
+                </div>
+            </div>
+            
+            <ValidationSummary Model="_articuloTemporal" />
+            @if (!string.IsNullOrEmpty(_mensajeErrorArticulo))
+            {
+                <p class="text-danger mt-2">@_mensajeErrorArticulo</p>
+            }
+
+            <hr />
+
+            <h4>Artículos en la Nueva Factura</h4>
+            @if (ControladorFactura.FacturaEnProgreso.Articulos.Any())
+            {
+                <table class="table table-sm table-striped">
+                    <tbody>
+                        @foreach (var art in ControladorFactura.FacturaEnProgreso.Articulos)
+                        {
+                            <tr>
+                                <td>@art.Nombre</td>
+                                <td>@art.Cantidad</td>
+                                <td>@art.PrecioUnitario.ToString("C")</td>
+                                <td>@art.Total.ToString("C")</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-warning" @onclick="() => IniciarEdicionLocal(art)">E</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarArticuloLocal(art.ArticuloId)">X</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <h4 class="text-end">Total: @ControladorFactura.FacturaEnProgreso.Total.ToString("C")</h4>
+            }
+            else {
+                <p>Aún no hay artículos agregados.</p>
+            }
+            
+            <button type="submit" class="btn btn-success w-100 mt-3 fs-5">Guardar Factura Completa</button>
+        </EditForm>
+    </div>
+
 </main>
 
 @code {
-   private string _nombreCliente = string.Empty;
-    private ArticuloFactura _nuevoArticulo = new ArticuloFactura();
-    private List<ArticuloFactura> _articulosMostrados = new List<ArticuloFactura>();
-    private string _mensajeErrorArticulo = string.Empty;
-    
+    private ArticuloFactura _articuloTemporal = new ArticuloFactura();
+    private ArticuloFactura _articuloParaEditar = null;
     private bool _modoEdicion = false;
+    private string _mensajeErrorArticulo = string.Empty;
 
-    protected override async Task OnInitializedAsync()
-    {
-        _nombreCliente = EstadoUsuario.NombreClienteActual;
-        if (!string.IsNullOrWhiteSpace(_nombreCliente))
-        {
-            await CargarArticulos();
-        }
-    }
 
-    // carga la tabla
-    private async Task CargarArticulos()
-    {
-        EstadoUsuario.NombreClienteActual = _nombreCliente;
-        _articulosMostrados = await ServicioFactura.GetArticulosPorClienteAsync(_nombreCliente);
-    }
-
-    // agrega o actualiza un articulo
-    private async Task GuardarArticulo()
+    // agregar artículo a la factura temporal
+    private void AgregarArticuloLocal()
     {
         _mensajeErrorArticulo = string.Empty;
-
-        // valida el articulo
-
-        if (string.IsNullOrWhiteSpace(_nombreCliente)) {
-            _mensajeErrorArticulo = "Debe ingresar un Nombre de Cliente primero."; return; }
-        if (string.IsNullOrWhiteSpace(_nuevoArticulo.Nombre)) {
-            _mensajeErrorArticulo = "Por favor, ingrese un nombre para el artículo."; return; }
-        if (_nuevoArticulo.Cantidad <= 0) {
-            _mensajeErrorArticulo = "La cantidad debe ser al menos 1."; return; }
-        if (_nuevoArticulo.PrecioUnitario < 0) {
-            _mensajeErrorArticulo = "El precio unitario no puede ser negativo."; return; }
-
-        if (_modoEdicion)
+        if (string.IsNullOrWhiteSpace(_articuloTemporal.Nombre) || _articuloTemporal.Cantidad <= 0)
         {
-            // actualiza
-            await ServicioFactura.ActualizarArticuloAsync(_nuevoArticulo);
+            _mensajeErrorArticulo = "Nombre y Cantidad (mayor a 0) son requeridos.";
+            return;
         }
-        else
-        {
-            // agrega
-            _nuevoArticulo.NombreCliente = _nombreCliente;
-            await ServicioFactura.AgregarArticuloAsync(_nuevoArticulo);
-        }
-
-        CancelarEdicion(); 
-        await CargarArticulos();
-    }
-
-    // carga el articulo en el modo de edicion
-    private void IniciarEdicion(ArticuloFactura articuloAEditar)
-    {
-        _nuevoArticulo = new ArticuloFactura
-        {
-            ArticuloId = articuloAEditar.ArticuloId,
-            NombreCliente = articuloAEditar.NombreCliente,
-            Nombre = articuloAEditar.Nombre,
-            Cantidad = articuloAEditar.Cantidad,
-            PrecioUnitario = articuloAEditar.PrecioUnitario,
-            Fecha = articuloAEditar.Fecha
-        };
         
-        _modoEdicion = true;
-        _mensajeErrorArticulo = string.Empty;
+        ControladorFactura.FacturaEnProgreso.Articulos.Add(_articuloTemporal);
+        _articuloTemporal = new ArticuloFactura();
+        _modoEdicion = false;
     }
 
-    //cancela el modo edicion
+    //edita artículo en la factura temporal
+    private void IniciarEdicionLocal(ArticuloFactura art)
+    {
+        _articuloParaEditar = art;
+        _articuloTemporal = new ArticuloFactura
+        {
+            ArticuloId = art.ArticuloId,
+            Nombre = art.Nombre,
+            Cantidad = art.Cantidad,
+            PrecioUnitario = art.PrecioUnitario
+        };
+        _modoEdicion = true;
+    }
+
+    //actualiza artículo en la factura temporal
+    private void ActualizarArticuloLocal()
+    {
+        _articuloParaEditar.Nombre = _articuloTemporal.Nombre;
+        _articuloParaEditar.Cantidad = _articuloTemporal.Cantidad;
+        _articuloParaEditar.PrecioUnitario = _articuloTemporal.PrecioUnitario;
+        
+        CancelarEdicion();
+    }
+
+
+    //elimina artículo en la factura temporal
+    private void EliminarArticuloLocal(Guid articuloId)
+    {
+        var art = ControladorFactura.FacturaEnProgreso.Articulos.FirstOrDefault(a => a.ArticuloId == articuloId);
+        if (art != null)
+        {
+            ControladorFactura.FacturaEnProgreso.Articulos.Remove(art);
+        }
+    }
+
+    //cancela edición de artículo
     private void CancelarEdicion()
     {
-        _nuevoArticulo = new ArticuloFactura();
+        _articuloTemporal = new ArticuloFactura();
+        _articuloParaEditar = null;
         _modoEdicion = false;
         _mensajeErrorArticulo = string.Empty;
     }
 
-    // elimina un articulo
-    private async Task IniciarEliminacion(Guid articuloId)
+    //guardar factura completa
+    private async Task GuardarFacturaAsync()
     {
-        await ServicioFactura.EliminarArticuloAsync(articuloId);
-        await CargarArticulos(); 
+        if (string.IsNullOrWhiteSpace(ControladorFactura.FacturaEnProgreso.NombreCliente))
+        {
+            _mensajeErrorArticulo = "El Nombre del Cliente es obligatorio para guardar la factura.";
+            return;
+        }
+        
+        await ServicioFactura.GuardarFacturaAsync(ControladorFactura.FacturaEnProgreso);
+        
+        ControladorFactura.FacturaEnProgreso = new Factura();
+        _mensajeErrorArticulo = string.Empty;
     }
 }
