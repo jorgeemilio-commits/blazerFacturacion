@@ -49,6 +49,7 @@ namespace blazerFacturacion.Components.Servicios
                 articuloExistente.Nombre = articuloModificado.Nombre;
                 articuloExistente.Cantidad = articuloModificado.Cantidad;
                 articuloExistente.PrecioUnitario = articuloModificado.PrecioUnitario;
+                articuloExistente.Fecha = articuloModificado.Fecha;
 
                 await _contexto.SaveChangesAsync();
             }

@@ -17,40 +17,24 @@
 
     <h4>@(_modoEdicion ? "Editando Artículo" : "Agregar Artículos")</h4>
 
-    <EditForm Model="_nuevoArticulo" OnValidSubmit="GuardarArticulo" FormName="ArticuloForm">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="row g-3">
-            <div class="col-md-5">
-                <label>Nombre del Artículo:</label>
-                <InputText class="form-control" @bind-Value="_nuevoArticulo.Nombre" />
-            </div>
-            <div class="col-md-2">
-                <label>Cantidad:</label>
-                <InputNumber class="form-control" @bind-Value="_nuevoArticulo.Cantidad" />
-            </div>
-            <div class="col-md-3">
-                <label>Precio Unitario:</label>
-                <InputNumber class="form-control" @bind-Value="_nuevoArticulo.PrecioUnitario" />
-            </div>
-            
-            <div class="col-md-2 d-flex flex-column align-items-end justify-content-end">
-                @if (_modoEdicion)
-                {
-                    <button type="submit" class="btn btn-warning w-100">Actualizar</button>
-                    <button type="button" class="btn btn-secondary w-100 mt-1" @onclick="CancelarEdicion">Cancelar</button>
-                }
-                else
-                {
-                    <button type="submit" class="btn btn-primary w-100">Agregar</button>
-                }
-            </div>
+   <EditForm Model="_nuevoArticulo" OnValidSubmit="GuardarArticulo" FormName="ArticuloForm">
+    <div class="row g-3">
+        <div class="col-md-4"> <label>Nombre del Artículo:</label>
+            <InputText class="form-control" @bind-Value="_nuevoArticulo.Nombre" />
         </div>
-        @if (!string.IsNullOrEmpty(_mensajeErrorArticulo))
-        {
-            <p class="text-danger mt-2">@_mensajeErrorArticulo</p>
-        }
+        <div class="col-md-3">
+            <label>Fecha:</label>
+            <InputDate class="form-control" @bind-Value="_nuevoArticulo.Fecha" />
+        </div>
+        <div class="col-md-1"> <label>Cantidad:</label>
+            <InputNumber class="form-control" @bind-Value="_nuevoArticulo.Cantidad" />
+        </div>
+        <div class="col-md-2"> <label>Precio Unitario:</label>
+            <InputNumber class="form-control" @bind-Value="_nuevoArticulo.PrecioUnitario" />
+        </div>
+        <div class="col-md-2 d-flex flex-column align-items-end justify-content-end">
+            </div>
+    </div>
     </EditForm>
     
     <hr />
@@ -58,36 +42,29 @@
     <h4>Artículos de: @_nombreCliente</h4>
     @if (_articulosMostrados.Any())
     {
-        <table class="table table-striped"> <thead>
+        <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Fecha</th> <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Subtotal</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var art in _articulosMostrados)
+            {
                 <tr>
-                    <th>Nombre</th>
-                    <th>Cantidad</th>
-                    <th>Precio Unitario</th>
-                    <th>Subtotal</th>
-                    <th>Editar</th> <th>Eliminar</th> </tr>
-            </thead>
-            <tbody>
-                @foreach (var art in _articulosMostrados)
-                {
-                    <tr>
-                        <td>@art.Nombre</td>
-                        <td>@art.Cantidad</td>
-                        <td>@art.PrecioUnitario.ToString("C")</td>
-                        <td>@art.Total.ToString("C")</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-warning" @onclick="() => IniciarEdicion(art)">
-                                Editar
-                            </button>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-danger" @onclick="() => IniciarEliminacion(art.ArticuloId)">
-                                Eliminar
-                            </button>
-                        </td>
+                    <td>@art.Fecha.ToShortDateString()</td> <td>@art.Nombre</td>
+                    <td>@art.Cantidad</td>
+                    <td>@art.PrecioUnitario.ToString("C")</td>
+                    <td>@art.Total.ToString("C")</td>
                     </tr>
-                }
-            </tbody>
-        </table>
+            }
+        </tbody>
+    </table>
         
         <div class="text-end">
             <h3>Total: @_articulosMostrados.Sum(a => a.Total).ToString("C")</h3>
@@ -164,7 +141,8 @@
             NombreCliente = articuloAEditar.NombreCliente,
             Nombre = articuloAEditar.Nombre,
             Cantidad = articuloAEditar.Cantidad,
-            PrecioUnitario = articuloAEditar.PrecioUnitario
+            PrecioUnitario = articuloAEditar.PrecioUnitario,
+            Fecha = articuloAEditar.Fecha
         };
         
         _modoEdicion = true;
