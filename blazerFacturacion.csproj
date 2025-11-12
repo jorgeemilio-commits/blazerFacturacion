@@ -14,4 +14,10 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Components\Data\ArticuloFactura.cs">
+      <Generator> </Generator>
+    </Compile>
+  </ItemGroup>
+
 </Project>

@@ -1,8 +1,12 @@
 ﻿namespace blazerFacturacion.Components.Data
 {
-    public class ServicioEstadoUsuario
+    public class Factura
     {
-        //guarda el cliente para que no se pierda al salir
-        public string NombreClienteActual { get; set; } = string.Empty;
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public string NombreCliente { get; set; } = string.Empty;
+        public DateTime Fecha { get; set; } = DateTime.Now;
+
+        public List<ArticuloFactura> Articulos { get; set; } = new List<ArticuloFactura>();
+        public decimal Total => Articulos.Sum(a => a.Total);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace blazerFacturacion.Components.Data
 {
@@ -6,13 +7,14 @@ namespace blazerFacturacion.Components.Data
     {
         [Key]
         public Guid ArticuloId { get; set; } = Guid.NewGuid();
-        public string NombreCliente { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
         public int Cantidad { get; set; } = 1;
         public decimal PrecioUnitario { get; set; } = 0;
-
-        public DateTime Fecha { get; set; } = DateTime.Now;
-
         public decimal Total { get { return Cantidad * PrecioUnitario; } }
+
+        public Guid FacturaId { get; set; }
+
+        [JsonIgnore] 
+        public Factura? Factura { get; set; }
     }
 }
