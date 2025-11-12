@@ -83,8 +83,8 @@
                     <td>@art.PrecioUnitario.ToString("C")</td>
                     <td>@art.Total.ToString("C")</td>
                     <td>
-                        <button type="button" class="btn btn-sm btn-outline-warning" @onclick="() => IniciarEdicionLocal(art)">E</button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarArticuloLocal(art.ArticuloId)">X</button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" @onclick="() => IniciarEdicionLocal(art)">🛠️</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarArticuloLocal(art)">🗑️</button>
                     </td>
                 </tr>
             }
@@ -151,9 +151,8 @@
 
 
     //elimina artículo en la factura temporal
-    private void EliminarArticuloLocal(Guid articuloId)
+    private void EliminarArticuloLocal(ArticuloFactura art)
     {
-        var art = ControladorFactura.FacturaEnProgreso.Articulos.FirstOrDefault(a => a.ArticuloId == articuloId);
         if (art != null)
         {
             ControladorFactura.FacturaEnProgreso.Articulos.Remove(art);
