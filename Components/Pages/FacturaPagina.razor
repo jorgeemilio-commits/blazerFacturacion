@@ -56,7 +56,7 @@
             <ValidationSummary Model="_articuloTemporal" />
             @if (!string.IsNullOrEmpty(_mensajeErrorArticulo))
             {
-                <p class="text-danger mt-2">@_mensajeErrorArticulo</p>
+            <p class="text-danger mt-2">@_mensajeErrorArticulo</p>
             }
 
             <hr />
@@ -64,25 +64,35 @@
             <h4>Artículos en la Nueva Factura</h4>
             @if (ControladorFactura.FacturaEnProgreso.Articulos.Any())
             {
-                <table class="table table-sm table-striped">
-                    <tbody>
-                        @foreach (var art in ControladorFactura.FacturaEnProgreso.Articulos)
-                        {
-                            <tr>
-                                <td>@art.Nombre</td>
-                                <td>@art.Cantidad</td>
-                                <td>@art.PrecioUnitario.ToString("C")</td>
-                                <td>@art.Total.ToString("C")</td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-outline-warning" @onclick="() => IniciarEdicionLocal(art)">E</button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarArticuloLocal(art.ArticuloId)">X</button>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-                <h4 class="text-end">Total: @ControladorFactura.FacturaEnProgreso.Total.ToString("C")</h4>
+            <table class="table table-sm table-striped table-bordered text-center align-middle">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Subtotal</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+            @foreach (var art in ControladorFactura.FacturaEnProgreso.Articulos)
+            {
+                 <tr>
+                    <td>@art.Nombre</td>
+                    <td>@art.Cantidad</td>
+                    <td>@art.PrecioUnitario.ToString("C")</td>
+                    <td>@art.Total.ToString("C")</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-warning" @onclick="() => IniciarEdicionLocal(art)">E</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarArticuloLocal(art.ArticuloId)">X</button>
+                    </td>
+                </tr>
             }
+            </tbody>
+            </table>
+            <h4 class="text-end">Total: @ControladorFactura.FacturaEnProgreso.Total.ToString("C")</h4>
+            }
+
             else {
                 <p>Aún no hay artículos agregados.</p>
             }

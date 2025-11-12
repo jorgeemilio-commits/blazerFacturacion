@@ -2,7 +2,7 @@
 {
     public class Factura
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public int Id { get; set; }
         public string NombreCliente { get; set; } = string.Empty;
         public DateTime Fecha { get; set; } = DateTime.Now;
 
