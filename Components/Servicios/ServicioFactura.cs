@@ -42,5 +42,39 @@ namespace blazerFacturacion.Components.Servicios
                 .OrderByDescending(f => f.Fecha)
                 .ToListAsync();
         }
+        // acualizar una factura existente
+        public async Task ActualizarFacturaAsync(int facturaId, string nuevoNombre, DateTime nuevaFecha)
+        {
+            var factura = await _contexto.Facturas.FindAsync(facturaId);
+            if (factura != null)
+            {
+                factura.NombreCliente = nuevoNombre;
+                factura.Fecha = nuevaFecha;
+                await _contexto.SaveChangesAsync();
+            }
+        }
+
+        // elimina una factura existente
+        public async Task EliminarFacturaAsync(int facturaId)
+        {
+            var factura = await _contexto.Facturas.FindAsync(facturaId);
+            if (factura != null)
+            {
+                var articulos = await _contexto.ArticulosFactura
+                                    .Where(a => a.FacturaId == facturaId)
+                                    .ToListAsync();
+
+                if (articulos.Any())
+                {
+                    _contexto.ArticulosFactura.RemoveRange(articulos);
+                }
+
+                _contexto.Facturas.Remove(factura);
+                await _contexto.SaveChangesAsync();
+            }
+        }
+
+
+
     }
 }
