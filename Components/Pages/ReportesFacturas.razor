@@ -1,0 +1,83 @@
+﻿@page "/reportes"
+@rendermode InteractiveServer
+
+@inject ServicioFactura ServicioFactura
+@inject ControladorFactura ControladorFactura
+
+<main class="container">
+    
+    <div class="border p-3">
+        <h3>Reporte de Facturas</h3>
+        
+        <div class="row g-3 mb-3">
+            <div class="col-md-8">
+                <label>Nombre del Cliente a Buscar:</label>
+                <InputText class="form-control" @bind-Value="_nombreClienteBusqueda" />
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end">
+                <button class="btn btn-info w-100" @onclick="BuscarHistorial">Buscar Facturas</button>
+            </div>
+        </div>
+
+        @if (_historialFacturas.Any())
+        {
+            <div class="accordion" id="historialAccordion">
+                @foreach (var facturaHist in _historialFacturas)
+                {
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-@facturaHist.Id">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@facturaHist.Id">
+                                Factura ID: @facturaHist.Id 
+                                | Fecha: @facturaHist.Fecha.ToShortDateString()
+                                | Total: @facturaHist.Total.ToString("C")
+                            </button>
+                        </h2>
+                        <div id="collapse-@facturaHist.Id" class="accordion-collapse collapse" data-bs-parent="#historialAccordion">
+                            <div class="accordion-body">
+                                <h5>Artículos:</h5>
+                                <ul>
+                                    @foreach (var artHist in facturaHist.Articulos)
+                                    {
+                                        <li>@artHist.Nombre (@artHist.Cantidad x @artHist.PrecioUnitario.ToString("C"))</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p>No se encontraron facturas para este cliente.</p>
+        }
+    </div>
+</main>
+
+@code {
+    private string _nombreClienteBusqueda = string.Empty;
+    private List<Factura> _historialFacturas = new List<Factura>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _nombreClienteBusqueda = ControladorFactura.NombreClienteActual;
+        if (!string.IsNullOrWhiteSpace(_nombreClienteBusqueda))
+        {
+            // Carga automáticamente el historial si había un nombre
+            await BuscarHistorial();
+        }
+    }
+
+    private async Task BuscarHistorial()
+    {
+        if (string.IsNullOrWhiteSpace(_nombreClienteBusqueda))
+        {
+            _historialFacturas.Clear();
+            return;
+        }
+        
+        ControladorFactura.NombreClienteActual = _nombreClienteBusqueda;
+        _historialFacturas = await ServicioFactura.GetFacturasPorClienteAsync(_nombreClienteBusqueda);
+    }
+}

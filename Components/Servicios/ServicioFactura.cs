@@ -20,6 +20,8 @@ namespace blazerFacturacion.Components.Servicios
         {
             if (nuevaFactura != null)
             {
+                nuevaFactura.Total = nuevaFactura.TotalCalculado;
+
                 _contexto.Facturas.Add(nuevaFactura);
                 await _contexto.SaveChangesAsync();
             }
@@ -32,10 +34,11 @@ namespace blazerFacturacion.Components.Servicios
             {
                 return new List<Factura>();
             }
+            var nombreBusquedaUpper = nombreCliente.ToUpper();
 
             return await _contexto.Facturas
                 .Include(f => f.Articulos)
-                .Where(f => f.NombreCliente.ToLower() == nombreCliente.ToLower())
+                .Where(f => f.NombreCliente != null && f.NombreCliente.ToUpper() == nombreBusquedaUpper)
                 .OrderByDescending(f => f.Fecha)
                 .ToListAsync();
         }
