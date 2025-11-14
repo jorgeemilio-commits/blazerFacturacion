@@ -3,6 +3,7 @@
 
 @inject ServicioFactura ServicioFactura
 @inject ControladorFactura ControladorFactura
+@inject IJSRuntime JSRuntime // Necesario para la confirmación de borrado
 
 <main class="container">
     
@@ -14,7 +15,6 @@
                 <label>Nombre del Cliente a Buscar:</label>
                 <InputText class="form-control" @bind-Value="_nombreClienteBusqueda" />
             </div>
-
             <div class="col-md-4 d-flex align-items-end">
                 <button class="btn btn-info w-100" @onclick="BuscarHistorial">Buscar Facturas</button>
             </div>
@@ -35,14 +35,47 @@
                         </h2>
                         <div id="collapse-@facturaHist.Id" class="accordion-collapse collapse" data-bs-parent="#historialAccordion">
                             <div class="accordion-body">
-                                <h5>Artículos:</h5>
-                                <ul>
-                                    @foreach (var artHist in facturaHist.Articulos)
-                                    {
-                                        <li>@artHist.Nombre (@artHist.Cantidad x @artHist.PrecioUnitario.ToString("C"))</li>
-                                    }
-                                </ul>
-                            </div>
+                                
+                                @if (_facturaEnEdicionId == facturaHist.Id)
+                                {
+                                    <EditForm Model="_facturaParaEditar" OnValidSubmit="() => GuardarEdicionAsync(facturaHist.Id)" FormName="EditFacturaForm">
+                                        <DataAnnotationsValidator />
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label>Nombre del Cliente:</label>
+                                                <InputText class="form-control" @bind-Value="_facturaParaEditar.NombreCliente" />
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Fecha:</label>
+                                                <InputDate class="form-control" @bind-Value="_facturaParaEditar.Fecha" />
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button type="submit" class="btn btn-success">Guardar</button>
+                                            <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+                                        </div>
+                                    </EditForm>
+                                }
+                                else
+                                {
+                                    <h5>Artículos:</h5>
+                                    <ul>
+                                        @foreach (var artHist in facturaHist.Articulos)
+                                        {
+                                            <li>@artHist.Nombre (@artHist.Cantidad x @artHist.PrecioUnitario.ToString("C"))</li>
+                                        }
+                                    </ul>
+                                    <hr />
+                                    <div class="text-end">
+                                        <button class="btn btn-sm btn-outline-warning" @onclick="() => IniciarEdicion(facturaHist)">
+                                            Editar Factura
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarEliminacion(facturaHist.Id)">
+                                            Eliminar Factura
+                                        </button>
+                                    </div>
+                                }
+                                </div>
                         </div>
                     </div>
                 }
@@ -59,16 +92,20 @@
     private string _nombreClienteBusqueda = string.Empty;
     private List<Factura> _historialFacturas = new List<Factura>();
 
+    private int? _facturaEnEdicionId = null; 
+    private Factura _facturaParaEditar = new Factura(); 
+
+    
     protected override async Task OnInitializedAsync()
     {
         _nombreClienteBusqueda = ControladorFactura.NombreClienteActual;
         if (!string.IsNullOrWhiteSpace(_nombreClienteBusqueda))
         {
-            // Carga automáticamente el historial si había un nombre
             await BuscarHistorial();
         }
     }
 
+    // busca el historial de facturas para el cliente ingresado
     private async Task BuscarHistorial()
     {
         if (string.IsNullOrWhiteSpace(_nombreClienteBusqueda))
@@ -79,5 +116,51 @@
         
         ControladorFactura.NombreClienteActual = _nombreClienteBusqueda;
         _historialFacturas = await ServicioFactura.GetFacturasPorClienteAsync(_nombreClienteBusqueda);
+    }
+
+    // inicia la edición de una factura
+
+    private void IniciarEdicion(Factura factura)
+    {
+        _facturaParaEditar = new Factura
+        {
+            Id = factura.Id,
+            NombreCliente = factura.NombreCliente,
+            Fecha = factura.Fecha
+        };
+        _facturaEnEdicionId = factura.Id;
+    }
+
+    //cancela la edición de una factura
+    private void CancelarEdicion()
+    {
+        _facturaEnEdicionId = null;
+        _facturaParaEditar = new Factura();
+    }
+
+    //guarda la edición de una factura
+    private async Task GuardarEdicionAsync(int facturaId)
+    {
+        await ServicioFactura.ActualizarFacturaAsync(
+            facturaId, 
+            _facturaParaEditar.NombreCliente, 
+            _facturaParaEditar.Fecha
+        );
+        
+        CancelarEdicion(); 
+        await BuscarHistorial();
+    }
+
+    // confirma y elimina una factura
+    private async Task ConfirmarEliminacion(int facturaId)
+    {
+        var confirmacion = await JSRuntime.InvokeAsync<bool>("confirm", 
+            "¿Estás seguro de que quieres eliminar esta factura? Esta acción no se puede deshacer.");
+
+        if (confirmacion)
+        {
+            await ServicioFactura.EliminarFacturaAsync(facturaId);
+            await BuscarHistorial(); 
+        }
     }
 }
