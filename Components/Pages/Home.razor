@@ -1,7 +1,53 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Inicio - Sistema de Facturación</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="text-center mt-5">
+    <h1 class="display-4 fw-bold text-primary">¡Bienvenido al Sistema!</h1>
+    <p class="lead text-muted">Gestiona tus productos y facturas de forma sencilla.</p>
+    
+    <hr class="my-4 w-50 mx-auto">
 
-Welcome to your new app.
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm hover-shadow">
+                <div class="card-body">
+                    <h2 class="text-success mb-3">➕</h2>
+                    <h5 class="card-title">Nueva Factura</h5>
+                    <p class="card-text small">Crea una venta seleccionando productos del catálogo.</p>
+                    <a href="factura" class="btn btn-outline-success w-100">Ir a Facturar</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm hover-shadow">
+                <div class="card-body">
+                    <h2 class="text-warning mb-3">📦</h2>
+                    <h5 class="card-title">Catálogo</h5>
+                    <p class="card-text small">Administra, edita y crea nuevos productos.</p>
+                    <a href="catalogo" class="btn btn-outline-warning w-100">Ver Catálogo</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm hover-shadow">
+                <div class="card-body">
+                    <h2 class="text-info mb-3">📊</h2>
+                    <h5 class="card-title">Reportes</h5>
+                    <p class="card-text small">Consulta el historial y totales anuales.</p>
+                    <a href="reportes" class="btn btn-outline-info w-100">Ver Reportes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        transition: transform 0.3s ease;
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+    }
+</style>
