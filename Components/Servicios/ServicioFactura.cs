@@ -74,7 +74,23 @@ namespace blazerFacturacion.Components.Servicios
             }
         }
 
+        // Busca facturas por cliente y año
+        public async Task<List<Factura>> GetFacturasPorAnioAsync(string nombreCliente, int anio)
+        {
+            if (string.IsNullOrWhiteSpace(nombreCliente) || anio <= 0)
+            {
+                return new List<Factura>();
+            }
 
+            var nombreBusquedaUpper = nombreCliente.ToUpper();
 
+            return await _contexto.Facturas
+                // Solo se ocupan los totales
+                .Where(f => f.NombreCliente != null &&
+                            f.NombreCliente.ToUpper() == nombreBusquedaUpper &&
+                            f.Fecha.Year == anio)
+                .OrderBy(f => f.Fecha) // Ordenar por fecha
+                .ToListAsync();
+        }
     }
 }
