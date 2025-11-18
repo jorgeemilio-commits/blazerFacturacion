@@ -1,14 +1,15 @@
 ﻿@page "/reportes"
 @rendermode InteractiveServer
 
+@using System.Globalization 
 @inject ServicioFactura ServicioFactura
 @inject ControladorFactura ControladorFactura
-@inject IJSRuntime JSRuntime // Necesario para la confirmación de borrado
+@inject IJSRuntime JSRuntime
 
 <main class="container">
-    
-    <div class="border p-3">
-        <h3>Reporte de Facturas</h3>
+
+    <div class="border p-3 mb-4">
+        <h3>Historial Detallado de Facturas</h3>
         
         <div class="row g-3 mb-3">
             <div class="col-md-8">
@@ -35,7 +36,6 @@
                         </h2>
                         <div id="collapse-@facturaHist.Id" class="accordion-collapse collapse" data-bs-parent="#historialAccordion">
                             <div class="accordion-body">
-                                
                                 @if (_facturaEnEdicionId == facturaHist.Id)
                                 {
                                     <EditForm Model="_facturaParaEditar" OnValidSubmit="() => GuardarEdicionAsync(facturaHist.Id)" FormName="EditFacturaForm">
@@ -75,7 +75,7 @@
                                         </button>
                                     </div>
                                 }
-                                </div>
+                            </div>
                         </div>
                     </div>
                 }
@@ -86,26 +86,85 @@
             <p>No se encontraron facturas para este cliente.</p>
         }
     </div>
+
+    <div class="border p-3">
+        <h3>Reporte Anual por Cliente</h3>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label>Nombre del Cliente:</label>
+                <InputText class="form-control" @bind-Value="_nombreClienteAnual" />
+            </div>
+            <div class="col-md-3">
+                <label>Año:</label>
+                <InputNumber class="form-control" @bind-Value="_anioBusquedaAnual" />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-primary w-100" @onclick="GenerarReporteAnual">Generar Reporte</button>
+            </div>
+        </div>
+
+        @if (_totalesMensuales.Any())
+        {
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Mes</th>
+                        <th>Total Mensual</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int mes = 1; mes <= 12; mes++)
+                    {
+                        <tr>
+                            <td>@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(mes)</td>
+                            <td>@(_totalesMensuales.ContainsKey(mes) ? _totalesMensuales[mes].ToString("C") : "$0.00")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="table-success fs-5">
+                        <td>Total Anual</td>
+                        <td>@_totalAnual.ToString("C")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        }
+        else if (_reporteGenerado)
+        {
+            <p>No se encontraron datos para este cliente en el año @_anioBusquedaAnual.</p>
+        }
+    </div>
+
 </main>
 
 @code {
     private string _nombreClienteBusqueda = string.Empty;
     private List<Factura> _historialFacturas = new List<Factura>();
+    private int? _facturaEnEdicionId = null;
+    private Factura _facturaParaEditar = new Factura();
 
-    private int? _facturaEnEdicionId = null; 
-    private Factura _facturaParaEditar = new Factura(); 
+
+    private string _nombreClienteAnual = string.Empty;
+    private int _anioBusquedaAnual = DateTime.Now.Year;
+    private Dictionary<int, decimal> _totalesMensuales = new Dictionary<int, decimal>();
+    private decimal _totalAnual = 0;
+    private bool _reporteGenerado = false; 
 
     
     protected override async Task OnInitializedAsync()
     {
+        // Carga el nombre del cliente desde el estado en ambos campos
         _nombreClienteBusqueda = ControladorFactura.NombreClienteActual;
+        _nombreClienteAnual = ControladorFactura.NombreClienteActual;
+        
         if (!string.IsNullOrWhiteSpace(_nombreClienteBusqueda))
         {
             await BuscarHistorial();
         }
     }
 
-    // busca el historial de facturas para el cliente ingresado
+    // --- HISTORIAL ---
     private async Task BuscarHistorial()
     {
         if (string.IsNullOrWhiteSpace(_nombreClienteBusqueda))
@@ -113,54 +172,63 @@
             _historialFacturas.Clear();
             return;
         }
-        
         ControladorFactura.NombreClienteActual = _nombreClienteBusqueda;
         _historialFacturas = await ServicioFactura.GetFacturasPorClienteAsync(_nombreClienteBusqueda);
     }
 
-    // inicia la edición de una factura
-
     private void IniciarEdicion(Factura factura)
     {
-        _facturaParaEditar = new Factura
-        {
-            Id = factura.Id,
-            NombreCliente = factura.NombreCliente,
-            Fecha = factura.Fecha
-        };
+        _facturaParaEditar = new Factura { Id = factura.Id, NombreCliente = factura.NombreCliente, Fecha = factura.Fecha };
         _facturaEnEdicionId = factura.Id;
     }
 
-    //cancela la edición de una factura
     private void CancelarEdicion()
     {
         _facturaEnEdicionId = null;
         _facturaParaEditar = new Factura();
     }
 
-    //guarda la edición de una factura
     private async Task GuardarEdicionAsync(int facturaId)
     {
-        await ServicioFactura.ActualizarFacturaAsync(
-            facturaId, 
-            _facturaParaEditar.NombreCliente, 
-            _facturaParaEditar.Fecha
-        );
-        
-        CancelarEdicion(); 
+        await ServicioFactura.ActualizarFacturaAsync(facturaId, _facturaParaEditar.NombreCliente, _facturaParaEditar.Fecha);
+        CancelarEdicion();
         await BuscarHistorial();
     }
 
-    // confirma y elimina una factura
     private async Task ConfirmarEliminacion(int facturaId)
     {
-        var confirmacion = await JSRuntime.InvokeAsync<bool>("confirm", 
-            "¿Estás seguro de que quieres eliminar esta factura? Esta acción no se puede deshacer.");
-
+        var confirmacion = await JSRuntime.InvokeAsync<bool>("confirm", "¿Estás seguro de que quieres eliminar esta factura? Esta acción no se puede deshacer.");
         if (confirmacion)
         {
             await ServicioFactura.EliminarFacturaAsync(facturaId);
-            await BuscarHistorial(); 
+            await BuscarHistorial();
+        }
+    }
+
+    // --- REPORTE ANUAL ---
+    private async Task GenerarReporteAnual()
+    {
+        _reporteGenerado = true; 
+        _totalesMensuales.Clear();
+        _totalAnual = 0;
+
+        // Guarda el nombre del cliente en el estado
+        ControladorFactura.NombreClienteActual = _nombreClienteAnual;
+
+        var facturasDelAnio = await ServicioFactura.GetFacturasPorAnioAsync(_nombreClienteAnual, _anioBusquedaAnual);
+
+        if (facturasDelAnio.Any())
+        {
+            // Agrupa los totales por mes
+            _totalesMensuales = facturasDelAnio
+                .GroupBy(f => f.Fecha.Month)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(f => f.Total) 
+                );
+            
+            // Calcula el total general
+            _totalAnual = facturasDelAnio.Sum(f => f.Total);
         }
     }
 }
