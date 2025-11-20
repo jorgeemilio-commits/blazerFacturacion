@@ -13,6 +13,7 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddScoped<ServicioFactura>();
 builder.Services.AddScoped<ControladorFactura>();
 builder.Services.AddScoped<ServicioArticulo>();
+builder.Services.AddScoped<ServicioReporte>();
 
 var app = builder.Build();
 
