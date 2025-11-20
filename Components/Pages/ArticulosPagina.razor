@@ -1,0 +1,123 @@
+﻿@page "/catalogo"
+@rendermode InteractiveServer
+@inject ServicioFactura ServicioFactura
+@inject IJSRuntime JSRuntime
+
+<main class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Catálogo de Productos</h3>
+    </div>
+
+    <div class="card p-4 mb-4 shadow-sm">
+        <h5 class="card-title mb-3">@( _articuloEnEdicion.Id == 0 ? "✨ Nuevo Producto" : "✏️ Editando Producto")</h5>
+        
+        <EditForm Model="_articuloEnEdicion" OnValidSubmit="GuardarArticulo">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre del Producto:</label>
+                    <InputText class="form-control" @bind-Value="_articuloEnEdicion.Nombre" placeholder="Ej. Coca Cola" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Precio Estándar:</label>
+                    <InputNumber class="form-control" @bind-Value="_articuloEnEdicion.Precio" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        @(_articuloEnEdicion.Id == 0 ? "Guardar" : "Actualizar")
+                    </button>
+                </div>
+            </div>
+            
+            @if (_articuloEnEdicion.Id != 0)
+            {
+                <div class="mt-2 text-end">
+                    <button type="button" class="btn btn-link text-secondary" @onclick="CancelarEdicion">Cancelar Edición</button>
+                </div>
+            }
+        </EditForm>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th style="width: 200px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_listaCatalogo.Any())
+                {
+                    @foreach (var item in _listaCatalogo)
+                    {
+                        <tr>
+                            <td class="text-start px-3">@item.Nombre</td>
+                            <td>@item.Precio.ToString("C")</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning me-2" @onclick="() => Editar(item)">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </button>
+                                <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(item)">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="3" class="text-muted py-4">No hay productos en el catálogo. ¡Agrega uno arriba!</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</main>
+
+@code {
+    private List<Articulo> _listaCatalogo = new List<Articulo>();
+    private Articulo _articuloEnEdicion = new Articulo();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarCatalogo();
+    }
+
+    private async Task CargarCatalogo()
+    {
+        _listaCatalogo = await ServicioFactura.GetCatalogoArticulosAsync();
+    }
+
+    private async Task GuardarArticulo()
+    {
+        await ServicioFactura.GuardarArticuloCatalogoAsync(_articuloEnEdicion);
+        _articuloEnEdicion = new Articulo(); // Limpiar formulario
+        await CargarCatalogo(); // Recargar tabla
+    }
+
+    private void Editar(Articulo item)
+    {
+        // Copiamos los datos para no editar directamente en la tabla
+        _articuloEnEdicion = new Articulo { Id = item.Id, Nombre = item.Nombre, Precio = item.Precio };
+    }
+
+    private void CancelarEdicion()
+    {
+        _articuloEnEdicion = new Articulo();
+    }
+
+    private async Task Eliminar(Articulo item)
+    {
+        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar '{item.Nombre}' del catálogo?");
+        if (confirmado)
+        {
+            await ServicioFactura.EliminarArticuloCatalogoAsync(item.Id);
+            await CargarCatalogo();
+        }
+    }
+}
