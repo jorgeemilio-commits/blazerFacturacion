@@ -12,6 +12,7 @@ builder.Services.AddDbContext<FacturaDbContexto>(options => options.UseSqlite(co
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddScoped<ServicioFactura>();
 builder.Services.AddScoped<ControladorFactura>();
+builder.Services.AddScoped<ServicioArticulo>();
 
 var app = builder.Build();
 

@@ -1,6 +1,7 @@
 ﻿@page "/catalogo"
 @rendermode InteractiveServer
-@inject ServicioFactura ServicioFactura
+@inject ServicioFactura ServicioArticulo
+@inject ServicioArticulo ServicioArticulo 
 @inject IJSRuntime JSRuntime
 
 <main class="container">
@@ -90,12 +91,12 @@
 
     private async Task CargarCatalogo()
     {
-        _listaCatalogo = await ServicioFactura.GetCatalogoArticulosAsync();
+        _listaCatalogo = await ServicioArticulo.GetCatalogoArticulosAsync();
     }
 
     private async Task GuardarArticulo()
     {
-        await ServicioFactura.GuardarArticuloCatalogoAsync(_articuloEnEdicion);
+        await ServicioArticulo.GuardarArticuloCatalogoAsync(_articuloEnEdicion);
         _articuloEnEdicion = new Articulo(); // Limpiar formulario
         await CargarCatalogo(); // Recargar tabla
     }
@@ -116,7 +117,7 @@
         bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar '{item.Nombre}' del catálogo?");
         if (confirmado)
         {
-            await ServicioFactura.EliminarArticuloCatalogoAsync(item.Id);
+            await ServicioArticulo.EliminarArticuloCatalogoAsync(item.Id);
             await CargarCatalogo();
         }
     }
