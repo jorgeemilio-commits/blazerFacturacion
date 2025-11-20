@@ -6,7 +6,7 @@
     </div>
 
     <main>
-        <div class="top-row px-4">
+        <div class="main-header px-4">
             <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">Sobre el Sistema</a>
         </div>
 
@@ -15,3 +15,122 @@
         </article>
     </main>
 </div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+<style>
+    /* 1. Estructura Principal */
+    .page {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    main {
+        flex: 1;
+    }
+
+    /* 2. Barra Lateral (Sidebar) */
+    .sidebar {
+        background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+        color: white;
+        min-width: 250px;
+    }
+
+    /* 3. Barra Superior Principal (CORREGIDO: main-header) */
+    .main-header {
+        background-color: #f7f7f7;
+        border-bottom: 1px solid #d6d5d5;
+        justify-content: flex-end;
+        height: 3.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .main-header a {
+        margin-left: 1.5rem;
+        text-decoration: none;
+        color: black;
+    }
+
+    .main-header a:hover {
+        text-decoration: underline;
+    }
+
+    /* 4. Reglas para Escritorio */
+    @@media (min-width: 641px) {
+        .page {
+            flex-direction: row;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh; /* Altura completa */
+            position: sticky;
+            top: 0;
+        }
+
+        .main-header {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .main-header, article {
+            padding-left: 2rem !important;
+            padding-right: 1.5rem !important;
+        }
+    }
+
+    /* 5. Reglas para Celulares */
+    @@media (max-width: 640.98px) {
+        .main-header {
+            display: none;
+        }
+        .sidebar {
+            width: 100%;
+            height: auto;
+        }
+    }
+
+    /* 6. Estilos del Menú Lateral (NavMenu) */
+    .navbar-brand {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: white !important;
+        padding: 1rem;
+        text-decoration: none;
+        display: block;
+    }
+
+    .nav-item {
+        padding-bottom: 0.5rem;
+    }
+
+    .nav-item a {
+        color: #d7d7d7 !important;
+        border-radius: 4px;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        line-height: 3rem;
+        text-decoration: none;
+        padding-left: 1rem;
+        margin: 0 10px;
+    }
+
+    .nav-item a.active {
+        background-color: rgba(255,255,255,0.37) !important;
+        color: white !important;
+    }
+
+    .nav-item a:hover {
+        background-color: rgba(255,255,255,0.1) !important;
+        color: white !important;
+    }
+</style>
