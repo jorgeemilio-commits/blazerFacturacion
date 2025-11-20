@@ -1,53 +1,109 @@
 ﻿@page "/"
+@rendermode InteractiveServer
+@using blazerFacturacion.Components.Data
+@inject ServicioReporte ServicioReporte
 
-<PageTitle>Inicio - Sistema de Facturación</PageTitle>
+<PageTitle>Inicio - Dashboard</PageTitle>
 
-<div class="text-center mt-5">
-    <h1 class="display-4 fw-bold text-primary">¡Bienvenido al Sistema!</h1>
-    <p class="lead text-muted">Gestiona tus productos y facturas de forma sencilla.</p>
-    
-    <hr class="my-4 w-50 mx-auto">
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold text-primary">📊 Resumen del Negocio</h1>
+        <p class="text-muted">Indicadores clave de rendimiento en tiempo real.</p>
+    </div>
 
-    <div class="row justify-content-center mt-5">
-        <div class="col-md-3">
-            <div class="card h-100 shadow-sm hover-shadow">
-                <div class="card-body">
-                    <h2 class="text-success mb-3">➕</h2>
-                    <h5 class="card-title">Nueva Factura</h5>
-                    <p class="card-text small">Crea una venta seleccionando productos del catálogo.</p>
-                    <a href="factura" class="btn btn-outline-success w-100">Ir a Facturar</a>
+    <div class="row g-3 mb-5">
+        <div class="col-md-4">
+            <div class="card text-white bg-success h-100 shadow-sm">
+                <div class="card-header">💰 Ingresos Totales</div>
+                <div class="card-body text-center">
+                    <h2 class="card-title">@_dashboard.TotalIngresos.ToString("C")</h2>
+                    <p class="card-text opacity-75">Ventas históricas</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-2">
+            <div class="card text-white bg-secondary h-100 shadow-sm">
+                <div class="card-header">🧾 Facturas</div>
+                <div class="card-body text-center">
+                    <h2>@_dashboard.TotalFacturas</h2>
+                    <p class="card-text small">Emitidas</p>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card h-100 shadow-sm hover-shadow">
-                <div class="card-body">
-                    <h2 class="text-warning mb-3">📦</h2>
-                    <h5 class="card-title">Catálogo</h5>
-                    <p class="card-text small">Administra, edita y crea nuevos productos.</p>
-                    <a href="catalogo" class="btn btn-outline-warning w-100">Ver Catálogo</a>
+        <div class="col-md-6">
+            <div class="card text-dark bg-warning h-100 shadow-sm">
+                <div class="card-header fw-bold">🔥 Artículo Estrella</div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <h3 class="m-0">@_dashboard.ArticuloMasVendido</h3>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card h-100 shadow-sm hover-shadow">
-                <div class="card-body">
-                    <h2 class="text-info mb-3">📊</h2>
-                    <h5 class="card-title">Reportes</h5>
-                    <p class="card-text small">Consulta el historial y totales anuales.</p>
-                    <a href="reportes" class="btn btn-outline-info w-100">Ver Reportes</a>
+        <div class="col-md-6">
+            <div class="card text-white bg-primary h-100 shadow-sm">
+                <div class="card-header">🏆 Mejor Cliente</div>
+                <div class="card-body text-center">
+                    <h3 class="card-title">@_dashboard.ClienteEstrella</h3>
+                    <p class="card-text opacity-75">Mayor volumen de compra</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card text-white bg-info h-100 shadow-sm">
+                <div class="card-header text-dark">📅 Mes Récord</div>
+                <div class="card-body text-center">
+                    <h3 class="card-title text-dark">@_dashboard.MesMasVentas</h3>
+                    <p class="card-text text-dark opacity-75">Mes con mayores ingresos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5" />
+
+    <h4 class="mb-3 text-muted">Acciones Rápidas</h4>
+    <div class="row justify-content-center g-4">
+        <div class="col-md-4">
+            <div class="card h-100 shadow hover-card border-success">
+                <div class="card-body text-center">
+                    <div class="display-4 mb-2">➕</div>
+                    <h5>Nueva Factura</h5>
+                    <a href="factura" class="btn btn-outline-success stretched-link">Ir a Crear</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow hover-card border-warning">
+                <div class="card-body text-center">
+                    <div class="display-4 mb-2">📦</div>
+                    <h5>Catálogo</h5>
+                    <a href="catalogo" class="btn btn-outline-warning stretched-link">Gestionar</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow hover-card border-info">
+                <div class="card-body text-center">
+                    <div class="display-4 mb-2">📈</div>
+                    <h5>Reportes</h5>
+                    <a href="reportes" class="btn btn-outline-info stretched-link">Ver Detalles</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .hover-shadow:hover {
-        transform: translateY(-5px);
-        transition: transform 0.3s ease;
-        box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+@code {
+    private DashboardInfo _dashboard = new DashboardInfo();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Cargamos los datos del servicio al entrar
+        _dashboard = await ServicioReporte.ObtenerDashboardAsync();
     }
-</style>
+}

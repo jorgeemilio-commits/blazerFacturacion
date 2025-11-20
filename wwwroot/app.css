@@ -52,3 +52,9 @@ fieldset {
 .card {
     transition: all 0.3s ease;
 }
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    transition: 0.3s;
+    background-color: #f8f9fa;
+}
