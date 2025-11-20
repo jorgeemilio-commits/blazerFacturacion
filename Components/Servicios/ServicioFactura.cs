@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
+using System; 
 
 namespace blazerFacturacion.Components.Servicios
 {
     public class ServicioFactura
-    {        
+    {
         private readonly string _cadenaConexion;
 
-        public ServicioFactura(FacturaDbContexto contexto, IConfiguration configuracion)
+        public ServicioFactura(IConfiguration configuracion)
         {
-            _cadenaConexion = configuracion.GetConnectionString("DefaultConnnection");
+            _cadenaConexion = configuracion.GetConnectionString("DefaultConnection");
         }
 
         // Guarda una factura (INSERT)
@@ -26,7 +27,7 @@ namespace blazerFacturacion.Components.Servicios
                 var sqlFactura = @"
                     INSERT INTO Facturas (NombreCliente, Fecha, Total) 
                     VALUES (@nombre, @fecha, @total);
-                    SELECT last_insert_rowid();"; 
+                    SELECT last_insert_rowid();";
 
                 int idFacturaGenerado = 0;
 
@@ -100,7 +101,6 @@ namespace blazerFacturacion.Components.Servicios
                 }
 
                 // Carga los artículos para cada factura encontrada
-
                 foreach (var factura in listaFacturas)
                 {
                     var sqlArticulos = @"SELECT Nombre, Cantidad, PrecioUnitario 
