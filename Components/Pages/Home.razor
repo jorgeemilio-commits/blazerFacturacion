@@ -2,6 +2,45 @@
 @rendermode InteractiveServer
 @using blazerFacturacion.Components.Data
 @inject ServicioReporte ServicioReporte
+
+<style>
+    :root {
+        --w-verde-claro: #CBFF8C;
+        --w-amarillo: #E3E36A;
+        --w-naranja: #C16200;
+        --w-rojo: #881600;
+        --w-vino: #4E0110;
+    }
+    
+    h1 { color: var(--w-rojo) !important; }
+
+    /* Tarjeta Ingresos (Verde -> Naranja Waldos) */
+    .bg-success {
+        background-color: var(--w-naranja) !important;
+        border-color: #a04000 !important;
+    }
+
+    /* Tarjeta Clientes (Azul -> Rojo Waldos) */
+    .bg-primary {
+        background-color: var(--w-rojo) !important;
+        border-color: var(--w-vino) !important;
+    }
+
+    /* Tarjeta Mes Récord (Celeste -> Vino Waldos) */
+    .bg-info {
+        background-color: var(--w-vino) !important;
+        color: white !important;
+    }
+    .bg-info .card-header, .bg-info .card-title, .bg-info p {
+        color: white !important;
+    }
+
+    /* Tarjeta Artículo (Amarillo -> Amarillo Waldos) */
+    .bg-warning {
+        background-color: var(--w-amarillo) !important;
+        color: #333 !important;
+    }
+</style>
    
 <PageTitle>Inicio - Dashboard - </PageTitle>
 
@@ -53,10 +92,10 @@
 
         <div class="col-md-6">
             <div class="card text-white bg-info h-100 shadow-sm">
-                <div class="card-header text-dark">📅 Mes Récord</div>
+                <div class="card-header">📅 Mes Récord</div>
                 <div class="card-body text-center">
-                    <h3 class="card-title text-dark">@_dashboard.MesMasVentas</h3>
-                    <p class="card-text text-dark opacity-75">Mes con mayores ingresos</p>
+                    <h3 class="card-title">@_dashboard.MesMasVentas</h3>
+                    <p class="card-text opacity-75">Mes con mayores ingresos</p>
                 </div>
             </div>
         </div>
@@ -100,10 +139,8 @@
 
 @code {
     private DashboardInfo _dashboard = new DashboardInfo();
-
     protected override async Task OnInitializedAsync()
     {
-        // Cargamos los datos del servicio al entrar
         _dashboard = await ServicioReporte.ObtenerDashboardAsync();
     }
 }

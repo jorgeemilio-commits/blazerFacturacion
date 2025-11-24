@@ -3,12 +3,46 @@
 @inject ServicioArticulo ServicioArticulo 
 @inject IJSRuntime JSRuntime
 
+<style>
+    :root {
+        --w-amarillo: #E3E36A;
+        --w-rojo: #881600;
+        --w-vino: #4E0110;
+    }
+
+    /* Botón Guardar (Azul -> Rojo) */
+    .btn-primary {
+        background-color: var(--w-rojo) !important;
+        border-color: var(--w-vino) !important;
+    }
+    
+    /* Botón Editar (Amarillo) */
+    .btn-warning {
+        background-color: var(--w-amarillo) !important;
+        color: #333 !important;
+        border-color: #c4c440 !important;
+    }
+
+    /* Botón Eliminar (Rojo/Vino oscuro) */
+    .btn-danger {
+        background-color: var(--w-vino) !important;
+        border-color: black !important;
+    }
+
+    /* Encabezado de la tabla (Negro -> Vino) */
+    .table-dark {
+        --bs-table-bg: var(--w-vino) !important;
+    }
+
+    h3, h5 { color: var(--w-rojo); font-weight: bold; }
+</style>
+
 <main class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Catálogo de Productos</h3>
     </div>
 
-    <div class="card p-4 mb-4 shadow-sm">
+    <div class="card p-4 mb-4 shadow-sm border-primary">
         <h5 class="card-title mb-3">@( _articuloEnEdicion.Id == 0 ? "✨ Nuevo Producto" : "✏️ Editando Producto")</h5>
         
         <EditForm Model="_articuloEnEdicion" OnValidSubmit="GuardarArticulo">
@@ -96,13 +130,12 @@
     private async Task GuardarArticulo()
     {
         await ServicioArticulo.GuardarArticuloCatalogoAsync(_articuloEnEdicion);
-        _articuloEnEdicion = new Articulo(); // Limpiar formulario
-        await CargarCatalogo(); // Recargar tabla
+        _articuloEnEdicion = new Articulo(); 
+        await CargarCatalogo();
     }
 
     private void Editar(Articulo item)
     {
-        // Copiamos los datos para no editar directamente en la tabla
         _articuloEnEdicion = new Articulo { Id = item.Id, Nombre = item.Nombre, Precio = item.Precio };
     }
 

@@ -1,0 +1,42 @@
+﻿/* waldos-theme.css */
+:root {
+    --w-verde-claro: #CBFF8C;
+    --w-amarillo: #E3E36A;
+    --w-naranja: #C16200;
+    --w-rojo: #881600;
+    --w-vino: #4E0110;
+}
+
+/* 1. BARRA LATERAL */
+.sidebar {
+    background-image: linear-gradient(180deg, var(--w-vino) 0%, var(--w-rojo) 100%) !important;
+}
+
+/* 2. TARJETAS Y BOTONES */
+.bg-primary, .btn-primary {
+    background-color: var(--w-rojo) !important;
+    border-color: var(--w-vino) !important;
+    color: white !important;
+}
+
+.bg-success, .btn-success {
+    background-color: var(--w-naranja) !important;
+    border-color: #a04000 !important;
+    color: white !important;
+}
+
+.bg-info, .btn-info {
+    background-color: var(--w-vino) !important;
+    border-color: #2a0005 !important;
+    color: white !important;
+}
+
+.card.bg-info .card-title, .card.bg-info .card-text, .card.bg-info h3 {
+    color: white !important;
+}
+
+.bg-warning, .btn-warning {
+    background-color: var(--w-amarillo) !important;
+    color: #333 !important;
+    border-color: #d4d440 !important;
+}

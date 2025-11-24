@@ -23,27 +23,111 @@
 </div>
 
 <style>
-    /* 1. Estructura Principal */
+    /* ============================================== */
+    /* NUEVA PALETA: ESTILO WALDOS (VERDE Y ROJO)     */
+    /* ============================================== */
+
+    :root {
+        /* 1. VERDE WALDOS (Principal para Menú) */
+        --w-verde-principal: #008f39; 
+        
+        /* 2. ROJO WALDOS (Para botones y acciones) */
+        --w-rojo-principal: #D50000;
+
+        /* 3. AMARILLO (Ofertas/Destacados) */
+        --w-amarillo: #FFD700;
+
+        /* 4. Tono Nuevo 1: VERDE LIMA (Para detalles o hover) */
+        --w-verde-lima: #76ff03;
+
+        /* 5. Tono Nuevo 2: VINO OSCURO (Para bordes/contrastes) */
+        --w-vino-oscuro: #8a0000;
+        
+        /* 6. NEUTRO (Gris claro para fondos) */
+        --w-gris-claro: #f5f5f5;
+    }
+
+    /* --- 1. BARRA LATERAL (AHORA ES VERDE) --- */
+    .sidebar {
+        /* Degradado de Verde Waldos a un Verde un poco más oscuro */
+        background-image: linear-gradient(180deg, var(--w-verde-principal) 0%, #006020 100%) !important;
+        color: white;
+        min-width: 250px;
+    }
+
+    /* --- 2. BOTONES PRIMARIOS (ROJOS) --- */
+    /* Botones principales "Guardar", "Agregar" serán ROJOS para contrastar con el menú verde */
+    .bg-primary, .btn-primary {
+        background-color: var(--w-rojo-principal) !important;
+        border-color: var(--w-vino-oscuro) !important;
+        color: white !important;
+    }
+    .btn-primary:hover {
+        background-color: var(--w-vino-oscuro) !important;
+    }
+    
+    /* Textos primarios (Títulos) en Rojo */
+    .text-primary { 
+        color: var(--w-rojo-principal) !important; 
+        font-weight: bold;
+    }
+    .border-primary { border-color: var(--w-rojo-principal) !important; }
+
+    /* --- 3. TARJETAS DE ÉXITO / INGRESOS (VERDE LIMA) --- */
+    /* Usamos el nuevo tono "Verde Lima" para el dinero o cosas positivas */
+    .bg-success, .btn-success {
+        background-color: #2e7d32 !important; /* Un verde billete */
+        border-color: #1b5e20 !important;
+        color: white !important;
+    }
+
+    /* --- 4. TARJETAS DE INFORMACIÓN (VERDE AZULADO/TURQUESA) --- */
+    /* Para variar del rojo/verde puro */
+    .bg-info, .btn-info {
+        background-color: #0097a7 !important;
+        border-color: #006064 !important;
+        color: white !important;
+    }
+    .card.bg-info .card-title, .card.bg-info .card-text, .card.bg-info h3 {
+        color: white !important;
+    }
+
+    /* --- 5. ADVERTENCIA (AMARILLO WALDOS) --- */
+    .bg-warning, .btn-warning {
+        background-color: var(--w-amarillo) !important;
+        color: #212121 !important; /* Texto oscuro */
+        border-color: #c6a700 !important;
+    }
+
+    /* --- ESTILOS DEL MENÚ LATERAL --- */
+    .nav-item a {
+        color: rgba(255,255,255,0.85) !important; /* Blanco casi puro */
+    }
+    
+    /* Cuando pasas el mouse por el menú */
+    .nav-item a:hover {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+    }
+
+    /* Item seleccionado activo: Fondo Rojo suave o Verde claro? */
+    /* Mejor un borde grueso del color AMARILLO o LIMA para resaltar sobre el verde */
+    .nav-item a.active {
+        background-color: rgba(0, 0, 0, 0.2) !important;
+        border-left: 5px solid var(--w-verde-lima) !important; /* Aquí usamos el tono nuevo */
+        color: white !important;
+    }
+
+    /* ============================================== */
+    /* ESTRUCTURA ORIGINAL (NO MODIFICAR)            */
+    /* ============================================== */
     .page {
         position: relative;
         display: flex;
         flex-direction: column;
         min-height: 100vh;
     }
-
-    main {
-        flex: 1;
-    }
-
-    /* 2. Barra Lateral (Sidebar) */
-    .sidebar {
-        /* Nuevo degradado Vino -> Rojo */
-        background-image: linear-gradient(180deg, #4E0110 0%, #881600 100%);
-        color: white;
-        min-width: 250px;
-    }
-
-    /* 3. Barra Superior Principal (CORREGIDO: main-header) */
+    main { flex: 1; }
     .main-header {
         background-color: #f7f7f7;
         border-bottom: 1px solid #d6d5d5;
@@ -52,69 +136,39 @@
         display: flex;
         align-items: center;
     }
-
     .main-header a {
         margin-left: 1.5rem;
         text-decoration: none;
         color: black;
     }
 
-    .main-header a:hover {
-        text-decoration: underline;
-    }
-
-    /* 4. Reglas para Escritorio */
+    /* Escritorio */
     @@media (min-width: 641px) {
-        .page {
-            flex-direction: row;
-        }
-
+        .page { flex-direction: row; }
         .sidebar {
             width: 250px;
-            height: 100vh; /* Altura completa */
+            height: 100vh;
             position: sticky;
             top: 0;
         }
-
         .main-header {
             position: sticky;
             top: 0;
             z-index: 1;
         }
-
         .main-header, article {
             padding-left: 2rem !important;
             padding-right: 1.5rem !important;
         }
     }
-
-    /* 5. Reglas para Celulares */
+    /* Móvil */
     @@media (max-width: 640.98px) {
-        .main-header {
-            display: none;
-        }
-        .sidebar {
-            width: 100%;
-            height: auto;
-        }
+        .main-header { display: none; }
+        .sidebar { width: 100%; height: auto; }
     }
-
-    /* 6. Estilos del Menú Lateral (NavMenu) */
-    .navbar-brand {
-        font-size: 1.1rem;
-        font-weight: bold;
-        color: white !important;
-        padding: 1rem;
-        text-decoration: none;
-        display: block;
-    }
-
-    .nav-item {
-        padding-bottom: 0.5rem;
-    }
-
+    
+    /* Ajustes extra para el menú */
     .nav-item a {
-        color: #d7d7d7 !important;
         border-radius: 4px;
         height: 3rem;
         display: flex;
@@ -123,15 +177,5 @@
         text-decoration: none;
         padding-left: 1rem;
         margin: 0 10px;
-    }
-
-    .nav-item a.active {
-        background-color: rgba(255,255,255,0.37) !important;
-        color: white !important;
-    }
-
-    .nav-item a:hover {
-        background-color: rgba(255,255,255,0.1) !important;
-        color: white !important;
     }
 </style>
