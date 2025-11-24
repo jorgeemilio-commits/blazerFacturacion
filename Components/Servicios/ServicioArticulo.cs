@@ -23,7 +23,7 @@ namespace blazerFacturacion.Components.Servicios
             using (var conexion = new SqliteConnection(_cadenaConexion))
             {
                 await conexion.OpenAsync();
-                var sql = "SELECT Id, Nombre, Precio FROM Articulos";
+                var sql = "SELECT Id, Nombre, Precio FROM Articulos ORDER BY Id DESC"; // Ordenamos por ID descendente para ver los nuevos primero
 
                 using (var comando = new SqliteCommand(sql, conexion))
                 {
@@ -31,12 +31,24 @@ namespace blazerFacturacion.Components.Servicios
                     {
                         while (await lector.ReadAsync())
                         {
-                            lista.Add(new Articulo
+                            var art = new Articulo();
+
+                            // Leemos el ID de forma segura
+                            art.Id = lector.GetInt32(0);
+
+                            // Leemos el Nombre, manejando nulos
+                            art.Nombre = lector.IsDBNull(1) ? "Sin Nombre" : lector.GetString(1);
+
+                            if (!lector.IsDBNull(2))
                             {
-                                Id = lector.GetInt32(0),
-                                Nombre = lector.GetString(1),
-                                Precio = lector.GetDecimal(2)
-                            });
+                                art.Precio = Convert.ToDecimal(lector.GetValue(2));
+                            }
+                            else
+                            {
+                                art.Precio = 0;
+                            }
+
+                            lista.Add(art);
                         }
                     }
                 }
