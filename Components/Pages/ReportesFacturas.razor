@@ -9,6 +9,9 @@
 <style>
     .header-reporte { background-color: #008f39 !important; color: white !important; }
     .total-anual-row { background-color: #D50000 !important; color: white !important; font-weight: bold; }
+    
+    /* Estilos para modo edición */
+    .bg-editing-row { background-color: #fff3cd !important; }
 </style>
 
 <main class="container">
@@ -41,25 +44,80 @@
                                 
                                 @if (_facturaEnEdicionId == facturaHist.Id)
                                 {
-                                    <div class="card p-3 border-warning">
-                                        <h6 class="text-warning fw-bold">Editar Datos de Factura</h6>
-                                        <EditForm Model="_facturaParaEditar" OnValidSubmit="() => GuardarEdicionAsync(facturaHist.Id)">
+                                    <div class="card p-3 border-warning mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h6 class="text-warning fw-bold m-0">✏️ Editar Cabecera</h6>
+                                            <button class="btn btn-sm btn-secondary" @onclick="CancelarEdicion">Cerrar Edición</button>
+                                        </div>
+
+                                        <EditForm Model="_facturaParaEditar" OnValidSubmit="() => GuardarEdicionCabeceraAsync(facturaHist.Id)">
                                             <DataAnnotationsValidator />
-                                            <div class="row g-2">
+                                            <div class="row g-2 align-items-end">
                                                 <div class="col-md-5">
-                                                    <label>Cliente:</label>
+                                                    <label class="small fw-bold">Cliente:</label>
                                                     <InputText class="form-control" @bind-Value="_facturaParaEditar.NombreCliente" />
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label>Fecha:</label>
+                                                    <label class="small fw-bold">Fecha:</label>
                                                     <InputDate class="form-control" @bind-Value="_facturaParaEditar.Fecha" />
                                                 </div>
-                                                <div class="col-md-3 d-flex align-items-end gap-2">
-                                                    <button type="submit" class="btn btn-success w-100">Guardar</button>
-                                                    <button type="button" class="btn btn-secondary w-100" @onclick="CancelarEdicion">Cancelar</button>
+                                                <div class="col-md-3">
+                                                    <button type="submit" class="btn btn-success w-100">Actualizar Datos</button>
                                                 </div>
                                             </div>
                                         </EditForm>
+
+                                        <hr />
+
+                                        <h6 class="text-muted fw-bold mb-2">📦 Gestión de Artículos</h6>
+                                        <table class="table table-sm table-bordered bg-white text-center align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Producto</th>
+                                                    <th width="15%">Cant.</th>
+                                                    <th width="20%">Precio</th>
+                                                    <th width="20%">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var art in facturaHist.Articulos)
+                                                {
+                                                    @if (_articuloEnEdicionId == art.ArticuloId)
+                                                    {
+                                                        <tr class="bg-editing-row">
+                                                            <td><input class="form-control form-control-sm" @bind="_articuloEditando.Nombre" /></td>
+                                                            <td><input type="number" class="form-control form-control-sm" @bind="_articuloEditando.Cantidad" /></td>
+                                                            <td><input type="number" class="form-control form-control-sm" @bind="_articuloEditando.PrecioUnitario" /></td>
+                                                            <td>
+                                                                <button class="btn btn-sm btn-success me-1" @onclick="GuardarEdicionArticulo">💾</button>
+                                                                <button class="btn btn-sm btn-secondary" @onclick="CancelarEdicionArticulo">❌</button>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                    else
+                                                    {
+                                                        <tr>
+                                                            <td class="text-start ps-3">@art.Nombre</td>
+                                                            <td>@art.Cantidad</td>
+                                                            <td>@art.PrecioUnitario.ToString("C")</td>
+                                                            <td>
+                                                                <button class="btn btn-sm btn-link text-warning p-0 me-2" @onclick="() => IniciarEdicionArticulo(art)">✏️</button>
+                                                                <button class="btn btn-sm btn-link text-danger p-0" @onclick="() => EliminarArticulo(art.ArticuloId, facturaHist.Id)">🗑️</button>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                }
+                                                
+                                                <tr class="table-info">
+                                                    <td><input class="form-control form-control-sm" placeholder="Nuevo..." @bind="_articuloNuevo.Nombre" /></td>
+                                                    <td><input type="number" class="form-control form-control-sm" placeholder="1" @bind="_articuloNuevo.Cantidad" /></td>
+                                                    <td><input type="number" class="form-control form-control-sm" placeholder="$" @bind="_articuloNuevo.PrecioUnitario" /></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-primary w-100" @onclick="() => AgregarArticulo(facturaHist.Id)">➕ Agregar</button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 }
                                 else 
@@ -77,10 +135,10 @@
                                     
                                     <div class="d-flex justify-content-end gap-2">
                                         <button class="btn btn-sm btn-outline-warning" @onclick="() => IniciarEdicion(facturaHist)">
-                                            ✏️ Editar Datos
+                                            ✏️ Editar Factura Completa
                                         </button>
                                         <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarEliminacion(facturaHist.Id)">
-                                            🗑️ Eliminar
+                                            🗑️ Eliminar Factura
                                         </button>
                                     </div>
                                 }
@@ -152,6 +210,11 @@
     private int? _facturaEnEdicionId = null;
     private Factura _facturaParaEditar = new Factura();
 
+    // Variables para edición de Artículos
+    private int? _articuloEnEdicionId = null;
+    private ArticuloFactura _articuloEditando = new ArticuloFactura();
+    private ArticuloFactura _articuloNuevo = new ArticuloFactura();
+
     // --- Variables Reporte Anual ---
     private string _nombreClienteAnual = string.Empty;
     private int _anioBusquedaAnual = DateTime.Now.Year;
@@ -180,24 +243,30 @@
         _historialFacturas = await ServicioFactura.GetFacturasPorClienteAsync(_nombreClienteBusqueda);
     }
 
-    // --- Métodos de Edición de Factura ---
+    // --- Métodos de Edición de Factura (Cabecera) ---
     private void IniciarEdicion(Factura factura)
     {
+        // Copia para editar cabecera
         _facturaParaEditar = new Factura { Id = factura.Id, NombreCliente = factura.NombreCliente, Fecha = factura.Fecha };
         _facturaEnEdicionId = factura.Id;
+        
+        // Reset variables de artículos
+        _articuloEnEdicionId = null;
+        _articuloNuevo = new ArticuloFactura();
     }
 
     private void CancelarEdicion()
     {
         _facturaEnEdicionId = null;
         _facturaParaEditar = new Factura();
+        _articuloEnEdicionId = null;
     }
 
-    private async Task GuardarEdicionAsync(int facturaId)
+    private async Task GuardarEdicionCabeceraAsync(int facturaId)
     {
         await ServicioFactura.ActualizarFacturaAsync(facturaId, _facturaParaEditar.NombreCliente, _facturaParaEditar.Fecha);
-        CancelarEdicion();
-        await BuscarHistorial(); 
+        // Nota: No cerramos la edición para que el usuario pueda seguir editando artículos si quiere
+        await BuscarHistorial(); // Refrescar para ver cambios
     }
 
     private async Task ConfirmarEliminacion(int facturaId)
@@ -206,6 +275,57 @@
         if (confirmacion)
         {
             await ServicioFactura.EliminarFacturaAsync(facturaId);
+            await BuscarHistorial();
+        }
+    }
+
+    // --- MÉTODOS DE GESTIÓN DE ARTÍCULOS ---
+
+    private async Task AgregarArticulo(int facturaId)
+    {
+        if (string.IsNullOrWhiteSpace(_articuloNuevo.Nombre) || _articuloNuevo.Cantidad <= 0) return;
+
+        _articuloNuevo.FacturaId = facturaId;
+        await ServicioFactura.AgregarArticuloAsync(_articuloNuevo);
+        
+        // Limpiar y recargar
+        _articuloNuevo = new ArticuloFactura();
+        await BuscarHistorial();
+    }
+
+    private void IniciarEdicionArticulo(ArticuloFactura art)
+    {
+        _articuloEnEdicionId = art.ArticuloId;
+        // Clonar para no editar directo en la lista hasta guardar
+        _articuloEditando = new ArticuloFactura 
+        { 
+            ArticuloId = art.ArticuloId, 
+            Nombre = art.Nombre, 
+            Cantidad = art.Cantidad, 
+            PrecioUnitario = art.PrecioUnitario,
+            FacturaId = art.FacturaId
+        };
+    }
+
+    private void CancelarEdicionArticulo()
+    {
+        _articuloEnEdicionId = null;
+        _articuloEditando = new ArticuloFactura();
+    }
+
+    private async Task GuardarEdicionArticulo()
+    {
+        await ServicioFactura.ActualizarArticuloAsync(_articuloEditando);
+        CancelarEdicionArticulo();
+        await BuscarHistorial();
+    }
+
+    private async Task EliminarArticulo(int idArticulo, int idFactura)
+    {
+        bool confirm = await JSRuntime.InvokeAsync<bool>("confirm", "¿Borrar este artículo?");
+        if (confirm)
+        {
+            await ServicioFactura.EliminarArticuloAsync(idArticulo, idFactura);
             await BuscarHistorial();
         }
     }
