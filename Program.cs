@@ -2,7 +2,9 @@ using blazerFacturacion.Components;
 using blazerFacturacion.Components.Servicios;
 using blazerFacturacion.Components.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Data.Sqlite; 
+using Microsoft.Data.Sqlite;
+using System;
+
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -17,9 +19,7 @@ builder.Services.AddScoped<ServicioReporte>();
 
 var app = builder.Build();
 
-
-//  INICIALIZACIÓN DE BASE DE DATOS
-
+// INICIALIZACIÓN DE BASE DE DATOS
 using (var alcance = app.Services.CreateScope())
 {
     var configuracion = alcance.ServiceProvider.GetRequiredService<IConfiguration>();
@@ -31,17 +31,16 @@ using (var alcance = app.Services.CreateScope())
         {
             conexion.Open();
 
-            // Crear las tablas si no existen
+            // Crear tablas si no existen 
             string sentenciaSql = @"
-                -- Tabla Facturas
                 CREATE TABLE IF NOT EXISTS Facturas (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     NombreCliente TEXT,
                     Fecha TEXT NOT NULL,
-                    Total REAL DEFAULT 0
+                    Total REAL DEFAULT 0,
+                    Archivada INTEGER DEFAULT 0  -- Agregamos la definición aquí para instalaciones nuevas
                 );
 
-                -- Tabla ArticulosFactura (Detalles de la factura)
                 CREATE TABLE IF NOT EXISTS ArticulosFactura (
                     ArticuloId INTEGER PRIMARY KEY AUTOINCREMENT,
                     Nombre TEXT,
@@ -51,7 +50,6 @@ using (var alcance = app.Services.CreateScope())
                     FOREIGN KEY (FacturaId) REFERENCES Facturas(Id)
                 );
 
-                -- NUEVA: Tabla Articulos (Catálogo General)
                 CREATE TABLE IF NOT EXISTS Articulos (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Nombre TEXT NOT NULL,
@@ -59,30 +57,36 @@ using (var alcance = app.Services.CreateScope())
                 );
             ";
 
-            //Ejecutar la sentencia SQL
             using (var comando = new SqliteCommand(sentenciaSql, conexion))
             {
                 comando.ExecuteNonQuery();
             }
+
+            try
+            {
+                var sqlAlter = "ALTER TABLE Facturas ADD COLUMN Archivada INTEGER DEFAULT 0;";
+                using (var comandoAlter = new SqliteCommand(sqlAlter, conexion))
+                {
+                    comandoAlter.ExecuteNonQuery();
+                }
+                Console.WriteLine("Columna 'Archivada' agregada exitosamente.");
+            }
+            catch { }
         }
     }
     catch (Exception ex)
     {
-        Console.WriteLine("Error creando la Base de Datos: " + ex.Message);
+        Console.WriteLine("Error en la Base de Datos: " + ex.Message);
     }
 }
 
-// Configure the HTTP request pipeline.
+app.UseStaticFiles();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
-//app.UseHttpsRedirection();
-
-app.UseStaticFiles();
 
 app.UseAntiforgery();
 app.MapRazorComponents<App>()

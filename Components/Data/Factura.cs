@@ -8,5 +8,6 @@
         public List<ArticuloFactura> Articulos { get; set; } = new List<ArticuloFactura>();
         public decimal Total { get; set; }
         public decimal TotalCalculado => Articulos.Sum(a => a.Total);
+        public bool Archivada { get; set; } = false;
     }
 }
