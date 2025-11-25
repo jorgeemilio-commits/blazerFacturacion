@@ -6,25 +6,33 @@
 @inject ControladorFactura ControladorFactura
 @inject IJSRuntime JSRuntime
 
+<style>
+    /* Estilos específicos para Factura */
+    .borde-rojo-top { border-top: 4px solid #D50000 !important; }
+    .borde-verde-top { border-top: 4px solid #008f39 !important; }
+    .header-tabla-verde { background-color: #008f39 !important; color: white !important; }
+    .total-final { color: #D50000; font-weight: 800; font-size: 1.5rem; }
+</style>
+
 <main class="container py-4">
     
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary fw-bold"><i class="bi bi-receipt"></i> Nueva Factura</h2>
-        <span class="badge bg-secondary fs-6">@DateTime.Now.ToShortDateString()</span>
+        <h2 class="fw-bold" style="color: #D50000;"><i class="bi bi-receipt"></i> Nueva Factura</h2>
+        <span class="badge bg-success fs-6">@DateTime.Now.ToShortDateString()</span>
     </div>
 
     <EditForm Model="ControladorFactura.FacturaEnProgreso" OnValidSubmit="GuardarFacturaAsync" FormName="FacturaForm">
         <DataAnnotationsValidator />
 
-        <div class="card shadow-sm mb-4 border-primary border-top border-4">
+        <div class="card shadow-sm mb-4 borde-rojo-top">
             <div class="card-body">
-                <h5 class="card-title text-muted mb-3">Datos Generales</h5>
+                <h5 class="card-title text-muted mb-3 fw-bold">Datos del Cliente</h5>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Nombre del Cliente <span class="text-danger">*</span></label>
                         <InputText class="form-control form-control-lg" 
                                    @bind-Value="ControladorFactura.FacturaEnProgreso.NombreCliente" 
-                                   placeholder="Escribe el nombre para desbloquear..." />
+                                   placeholder="Nombre del cliente..." />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Fecha de Emisión</label>
@@ -36,11 +44,11 @@
         </div>
 
         <fieldset disabled="@string.IsNullOrWhiteSpace(ControladorFactura.FacturaEnProgreso.NombreCliente)">
-            <div class="card shadow-sm mb-4 @(string.IsNullOrWhiteSpace(ControladorFactura.FacturaEnProgreso.NombreCliente) ? "bg-light opacity-50" : "")">
+            <div class="card shadow-sm mb-4 borde-verde-top @(string.IsNullOrWhiteSpace(ControladorFactura.FacturaEnProgreso.NombreCliente) ? "bg-light opacity-50" : "")">
                 <div class="card-header bg-white py-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="m-0 @(_modoEdicion ? "text-warning" : "text-success")">
-                            @(_modoEdicion ? "✏️ Editando Artículo" : "🛒 Agregar Productos")
+                        <h5 class="m-0 fw-bold" style="color: #008f39;">
+                             @(_modoEdicion ? "✏️ Editando Artículo" : "🛒 Agregar Productos")
                         </h5>
                         @if (string.IsNullOrWhiteSpace(ControladorFactura.FacturaEnProgreso.NombreCliente))
                         {
@@ -54,7 +62,7 @@
                     {
                         <div class="mb-3">
                             <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="bi bi-search"></i> Buscar</span>
+                                <span class="input-group-text bg-success text-white"><i class="bi bi-search"></i> Buscar</span>
                                 <select class="form-select" @onchange="AlSeleccionarProducto">
                                     <option value="0">-- Seleccionar del Catálogo --</option>
                                     @foreach (var prod in _catalogoDisponibles)
@@ -92,7 +100,7 @@
                             }
                             else
                             {
-                                <button type="button" class="btn btn-success w-100" @onclick="AgregarArticuloLocal">
+                                <button type="button" class="btn btn-success w-100 fw-bold" @onclick="AgregarArticuloLocal">
                                     Agregar
                                 </button>
                             }
@@ -111,10 +119,10 @@
 
         @if (ControladorFactura.FacturaEnProgreso.Articulos.Any())
         {
-            <div class="card shadow-sm">
+            <div class="card shadow-sm border-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 text-center">
-                        <thead class="table-light">
+                        <thead class="header-tabla-verde">
                             <tr>
                                 <th class="text-start ps-4">Descripción</th>
                                 <th>Cant.</th>
@@ -130,7 +138,7 @@
                                     <td class="text-start ps-4 fw-500">@art.Nombre</td>
                                     <td><span class="badge bg-light text-dark border">@art.Cantidad</span></td>
                                     <td>@art.PrecioUnitario.ToString("C")</td>
-                                    <td class="fw-bold text-primary">@art.Total.ToString("C")</td>
+                                    <td class="fw-bold text-success">@art.Total.ToString("C")</td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-outline-warning me-1 border-0" 
                                                 @onclick="() => IniciarEdicionLocal(art)" title="Editar">
@@ -147,7 +155,7 @@
                         <tfoot class="table-light">
                             <tr>
                                 <td colspan="3" class="text-end pe-3 fs-5">Total a Pagar:</td>
-                                <td class="fs-4 fw-bold text-success">@ControladorFactura.FacturaEnProgreso.TotalCalculado.ToString("C")</td>
+                                <td class="total-final">@ControladorFactura.FacturaEnProgreso.TotalCalculado.ToString("C")</td>
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -156,7 +164,7 @@
             </div>
 
             <div class="mt-4 mb-5">
-                <button type="submit" class="btn btn-primary btn-lg w-100 shadow">
+                <button type="submit" class="btn btn-primary btn-lg w-100 shadow fw-bold">
                     💾 Guardar Factura
                 </button>
             </div>
@@ -165,9 +173,9 @@
         {
             @if (!string.IsNullOrWhiteSpace(ControladorFactura.FacturaEnProgreso.NombreCliente))
             {
-                <div class="text-center py-5 text-muted border rounded border-dashed">
+                <div class="text-center py-5 text-muted border rounded border-dashed bg-light">
                     <p class="mb-0 fs-5">La factura está vacía.</p>
-                    <small>Agrega artículos usando el panel de arriba.</small>
+                    <small>Agrega artículos usando el panel verde de arriba.</small>
                 </div>
             }
         }
@@ -180,14 +188,12 @@
     private ArticuloFactura _articuloParaEditar = null;
     private bool _modoEdicion = false;
     private string _mensajeErrorArticulo = string.Empty;
-    
     private List<Articulo> _catalogoDisponibles = new List<Articulo>();
 
     protected override async Task OnInitializedAsync()
     {
         try 
         {
-            // Usamos ServicioArticulo para cargar el catálogo
             _catalogoDisponibles = await ServicioArticulo.GetCatalogoArticulosAsync();
         }
         catch (Exception ex)
@@ -218,8 +224,6 @@
     private void AgregarArticuloLocal()
     {
         _mensajeErrorArticulo = string.Empty;
-        
-        // Validación extra por seguridad
         if (string.IsNullOrWhiteSpace(ControladorFactura.FacturaEnProgreso.NombreCliente))
         {
             _mensajeErrorArticulo = "Debes escribir el nombre del cliente primero.";
@@ -288,13 +292,9 @@
             return;
         }
         
-        // Usamos ServicioFactura para guardar la venta
         await ServicioFactura.GuardarFacturaAsync(ControladorFactura.FacturaEnProgreso);
-        
-        // Mensaje de éxito (Opcional: Podrías usar JS alert)
         await JSRuntime.InvokeVoidAsync("alert", "¡Factura guardada exitosamente!");
-
-        // Resetear
+        
         ControladorFactura.FacturaEnProgreso = new Factura();
         _articuloTemporal = new ArticuloFactura();
         _mensajeErrorArticulo = string.Empty;

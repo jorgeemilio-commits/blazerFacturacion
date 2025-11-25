@@ -6,13 +6,18 @@
 @inject ControladorFactura ControladorFactura
 @inject IJSRuntime JSRuntime
 
+<style>
+    .header-reporte { background-color: #008f39 !important; color: white !important; }
+    .total-anual-row { background-color: #D50000 !important; color: white !important; font-weight: bold; }
+</style>
+
 <main class="container">
 
-    <div class="card p-4 mb-4 shadow-sm">
-        <h3 class="mb-3">🔎 Historial de Facturas</h3>
+    <div class="card p-4 mb-4 shadow-sm" style="border-top: 5px solid #D50000;">
+        <h3 class="mb-3 text-primary">🔎 Historial de Facturas</h3>
         
         <div class="input-group mb-3">
-            <span class="input-group-text">Cliente:</span>
+            <span class="input-group-text fw-bold">Cliente:</span>
             <InputText class="form-control" @bind-Value="_nombreClienteBusqueda" placeholder="Nombre del cliente..." />
             <button class="btn btn-primary" @onclick="BuscarHistorial">Buscar</button>
         </div>
@@ -22,12 +27,12 @@
             <div class="accordion" id="historialAccordion">
                 @foreach (var facturaHist in _historialFacturas)
                 {
-                    <div class="accordion-item">
+                    <div class="accordion-item border-success">
                         <h2 class="accordion-header" id="heading-@facturaHist.Id">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@facturaHist.Id">
+                            <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@facturaHist.Id">
                                 <div class="d-flex w-100 justify-content-between me-3">
-                                    <span><strong>#@facturaHist.Id</strong> - @facturaHist.Fecha.ToShortDateString()</span>
-                                    <span class="text-success fw-bold">@facturaHist.Total.ToString("C")</span>
+                                    <span>🧾 Factura #@facturaHist.Id - <small class="text-muted">@facturaHist.Fecha.ToShortDateString()</small></span>
+                                    <span class="text-success">@facturaHist.Total.ToString("C")</span>
                                 </div>
                             </button>
                         </h2>
@@ -37,7 +42,7 @@
                                 @if (_facturaEnEdicionId == facturaHist.Id)
                                 {
                                     <div class="card p-3 border-warning">
-                                        <h6 class="text-warning">Editar Datos de Factura</h6>
+                                        <h6 class="text-warning fw-bold">Editar Datos de Factura</h6>
                                         <EditForm Model="_facturaParaEditar" OnValidSubmit="() => GuardarEdicionAsync(facturaHist.Id)">
                                             <DataAnnotationsValidator />
                                             <div class="row g-2">
@@ -59,7 +64,7 @@
                                 }
                                 else 
                                 {
-                                    <h6 class="text-muted">Artículos de la factura:</h6>
+                                    <h6 class="text-muted border-bottom pb-2">Artículos:</h6>
                                     <ul class="list-group mb-3">
                                         @foreach (var artHist in facturaHist.Articulos)
                                         {
@@ -72,10 +77,10 @@
                                     
                                     <div class="d-flex justify-content-end gap-2">
                                         <button class="btn btn-sm btn-outline-warning" @onclick="() => IniciarEdicion(facturaHist)">
-                                            Editar Datos
+                                            ✏️ Editar Datos
                                         </button>
                                         <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarEliminacion(facturaHist.Id)">
-                                            Eliminar Factura
+                                            🗑️ Eliminar
                                         </button>
                                     </div>
                                 }
@@ -87,20 +92,22 @@
         }
         else
         {
-            <div class="text-muted p-3">No se encontraron facturas. Intenta buscar otro nombre.</div>
+            <div class="text-muted p-3 text-center border rounded bg-light">
+                No se encontraron facturas. Intenta buscar otro nombre.
+            </div>
         }
     </div>
 
-    <div class="card p-4 shadow-sm">
-        <h3 class="mb-3">📊 Reporte Anual</h3>
+    <div class="card p-4 shadow-sm" style="border-top: 5px solid #008f39;">
+        <h3 class="mb-3 text-success">📊 Reporte Anual</h3>
 
         <div class="row g-3 mb-3">
             <div class="col-md-6">
-                <label class="form-label">Cliente:</label>
+                <label class="form-label fw-bold">Cliente:</label>
                 <InputText class="form-control" @bind-Value="_nombreClienteAnual" />
             </div>
             <div class="col-md-3">
-                <label class="form-label">Año:</label>
+                <label class="form-label fw-bold">Año:</label>
                 <InputNumber class="form-control" @bind-Value="_anioBusquedaAnual" />
             </div>
             <div class="col-md-3 d-flex align-items-end">
@@ -111,7 +118,7 @@
         @if (_totalesMensuales.Any())
         {
             <table class="table table-bordered table-sm text-center">
-                <thead class="table-secondary">
+                <thead class="header-reporte">
                     <tr>
                         <th>Mes</th>
                         <th>Venta Total</th>
@@ -121,12 +128,12 @@
                     @for (int mes = 1; mes <= 12; mes++)
                     {
                         <tr>
-                            <td>@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(mes)</td>
+                            <td class="fw-bold">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(mes).ToUpper()</td>
                             <td>@(_totalesMensuales.ContainsKey(mes) ? _totalesMensuales[mes].ToString("C") : "-")</td>
                         </tr>
                     }
                 </tbody>
-                <tfoot class="table-dark fw-bold">
+                <tfoot class="total-anual-row">
                     <tr>
                         <td>TOTAL ANUAL</td>
                         <td>@_totalAnual.ToString("C")</td>
@@ -153,7 +160,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Recuperar estado del controlador para no perder la búsqueda al cambiar de página
         _nombreClienteBusqueda = ControladorFactura.NombreClienteActual;
         _nombreClienteAnual = ControladorFactura.NombreClienteActual;
         
@@ -170,16 +176,13 @@
             _historialFacturas.Clear();
             return;
         }
-        // Guardar en el controlador
         ControladorFactura.NombreClienteActual = _nombreClienteBusqueda;
-        // Llamar al servicio SQL
         _historialFacturas = await ServicioFactura.GetFacturasPorClienteAsync(_nombreClienteBusqueda);
     }
 
     // --- Métodos de Edición de Factura ---
     private void IniciarEdicion(Factura factura)
     {
-        // Copia simple para editar
         _facturaParaEditar = new Factura { Id = factura.Id, NombreCliente = factura.NombreCliente, Fecha = factura.Fecha };
         _facturaEnEdicionId = factura.Id;
     }
@@ -194,12 +197,11 @@
     {
         await ServicioFactura.ActualizarFacturaAsync(facturaId, _facturaParaEditar.NombreCliente, _facturaParaEditar.Fecha);
         CancelarEdicion();
-        await BuscarHistorial(); // Recargar lista
+        await BuscarHistorial(); 
     }
 
     private async Task ConfirmarEliminacion(int facturaId)
     {
-        // Confirmación con JavaScript nativo
         var confirmacion = await JSRuntime.InvokeAsync<bool>("confirm", "⚠️ ¿Eliminar esta factura y sus artículos? No se puede deshacer.");
         if (confirmacion)
         {
@@ -214,19 +216,13 @@
         _totalesMensuales.Clear();
         _totalAnual = 0;
         
-        // Sincronizar búsqueda
         ControladorFactura.NombreClienteActual = _nombreClienteAnual;
-
-        // Obtener datos brutos del año
         var facturasDelAnio = await ServicioFactura.GetFacturasPorAnioAsync(_nombreClienteAnual, _anioBusquedaAnual);
-
         if (facturasDelAnio.Any())
         {
-            // Procesar datos en memoria (LINQ to Objects)
             _totalesMensuales = facturasDelAnio
                 .GroupBy(f => f.Fecha.Month)
                 .ToDictionary(g => g.Key, g => g.Sum(f => f.Total));
-            
             _totalAnual = facturasDelAnio.Sum(f => f.Total);
         }
     }

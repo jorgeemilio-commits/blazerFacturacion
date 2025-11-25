@@ -4,46 +4,25 @@
 @inject IJSRuntime JSRuntime
 
 <style>
-    :root {
-        --w-amarillo: #E3E36A;
-        --w-rojo: #881600;
-        --w-vino: #4E0110;
+    /* Estilo local para tabla Waldos */
+    .tabla-waldos thead {
+        background-color: #008f39 !important; /* Verde Principal */
+        color: white;
     }
-
-    /* Botón Guardar (Azul -> Rojo) */
-    .btn-primary {
-        background-color: var(--w-rojo) !important;
-        border-color: var(--w-vino) !important;
+    .card-edicion {
+        border-top: 5px solid #D50000; /* Borde Rojo arriba */
     }
-    
-    /* Botón Editar (Amarillo) */
-    .btn-warning {
-        background-color: var(--w-amarillo) !important;
-        color: #333 !important;
-        border-color: #c4c440 !important;
-    }
-
-    /* Botón Eliminar (Rojo/Vino oscuro) */
-    .btn-danger {
-        background-color: var(--w-vino) !important;
-        border-color: black !important;
-    }
-
-    /* Encabezado de la tabla (Negro -> Vino) */
-    .table-dark {
-        --bs-table-bg: var(--w-vino) !important;
-    }
-
-    h3, h5 { color: var(--w-rojo); font-weight: bold; }
 </style>
 
 <main class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>Catálogo de Productos</h3>
+        <h3 class="fw-bold" style="color: #D50000;">Catálogo de Productos</h3>
     </div>
 
-    <div class="card p-4 mb-4 shadow-sm border-primary">
-        <h5 class="card-title mb-3">@( _articuloEnEdicion.Id == 0 ? "✨ Nuevo Producto" : "✏️ Editando Producto")</h5>
+    <div class="card p-4 mb-4 shadow-sm card-edicion">
+        <h5 class="card-title mb-3 fw-bold text-success">
+            @( _articuloEnEdicion.Id == 0 ? "✨ Nuevo Producto" : "✏️ Editando Producto")
+        </h5>
         
         <EditForm Model="_articuloEnEdicion" OnValidSubmit="GuardarArticulo">
             <DataAnnotationsValidator />
@@ -51,15 +30,15 @@
 
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Nombre del Producto:</label>
+                    <label class="form-label fw-bold">Nombre del Producto:</label>
                     <InputText class="form-control" @bind-Value="_articuloEnEdicion.Nombre" placeholder="Ej. Coca Cola" />
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Precio Estándar:</label>
+                    <label class="form-label fw-bold">Precio Estándar:</label>
                     <InputNumber class="form-control" @bind-Value="_articuloEnEdicion.Precio" />
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
                         @(_articuloEnEdicion.Id == 0 ? "Guardar" : "Actualizar")
                     </button>
                 </div>
@@ -74,9 +53,9 @@
         </EditForm>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover table-bordered text-center align-middle">
-            <thead class="table-dark">
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover table-bordered text-center align-middle tabla-waldos mb-0">
+            <thead>
                 <tr>
                     <th>Nombre</th>
                     <th>Precio</th>
@@ -89,14 +68,14 @@
                     @foreach (var item in _listaCatalogo)
                     {
                         <tr>
-                            <td class="text-start px-3">@item.Nombre</td>
-                            <td>@item.Precio.ToString("C")</td>
+                            <td class="text-start px-3 fw-bold">@item.Nombre</td>
+                            <td class="text-success fw-bold">@item.Precio.ToString("C")</td>
                             <td>
                                 <button class="btn btn-sm btn-warning me-2" @onclick="() => Editar(item)">
-                                    <i class="bi bi-pencil"></i> Editar
+                                    ✏️ Editar
                                 </button>
-                                <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(item)">
-                                    <i class="bi bi-trash"></i> Eliminar
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => Eliminar(item)">
+                                    🗑️ Eliminar
                                 </button>
                             </td>
                         </tr>
