@@ -2,45 +2,6 @@
 @rendermode InteractiveServer
 @using blazerFacturacion.Components.Data
 @inject ServicioReporte ServicioReporte
-
-<style>
-    :root {
-        --w-verde-claro: #CBFF8C;
-        --w-amarillo: #E3E36A;
-        --w-naranja: #C16200;
-        --w-rojo: #881600;
-        --w-vino: #4E0110;
-    }
-    
-    h1 { color: var(--w-rojo) !important; }
-
-    /* Tarjeta Ingresos (Verde -> Naranja Waldos) */
-    .bg-success {
-        background-color: var(--w-naranja) !important;
-        border-color: #a04000 !important;
-    }
-
-    /* Tarjeta Clientes (Azul -> Rojo Waldos) */
-    .bg-primary {
-        background-color: var(--w-rojo) !important;
-        border-color: var(--w-vino) !important;
-    }
-
-    /* Tarjeta Mes Récord (Celeste -> Vino Waldos) */
-    .bg-info {
-        background-color: var(--w-vino) !important;
-        color: white !important;
-    }
-    .bg-info .card-header, .bg-info .card-title, .bg-info p {
-        color: white !important;
-    }
-
-    /* Tarjeta Artículo (Amarillo -> Amarillo Waldos) */
-    .bg-warning {
-        background-color: var(--w-amarillo) !important;
-        color: #333 !important;
-    }
-</style>
    
 <PageTitle>Inicio - Dashboard - </PageTitle>
 
@@ -52,7 +13,7 @@
 
     <div class="row g-3 mb-5">
         <div class="col-md-4">
-            <div class="card text-white bg-success h-100 shadow-sm">
+            <div class="card text-white card-waldos-ingresos h-100 shadow-sm">
                 <div class="card-header">💰 Ingresos Totales</div>
                 <div class="card-body text-center">
                     <h2 class="card-title">@_dashboard.TotalIngresos.ToString("C")</h2>
@@ -62,7 +23,7 @@
         </div>
         
         <div class="col-md-2">
-            <div class="card text-white bg-secondary h-100 shadow-sm">
+            <div class="card text-white card-waldos-facturas h-100 shadow-sm">
                 <div class="card-header">🧾 Facturas</div>
                 <div class="card-body text-center">
                     <h2>@_dashboard.TotalFacturas</h2>
@@ -81,7 +42,7 @@
         </div>
 
         <div class="col-md-6">
-            <div class="card text-white bg-primary h-100 shadow-sm">
+            <div class="card text-white card-waldos-cliente h-100 shadow-sm">
                 <div class="card-header">🏆 Mejor Cliente</div>
                 <div class="card-body text-center">
                     <h3 class="card-title">@_dashboard.ClienteEstrella</h3>
@@ -91,7 +52,7 @@
         </div>
 
         <div class="col-md-6">
-            <div class="card text-white bg-info h-100 shadow-sm">
+            <div class="card text-white card-waldos-record h-100 shadow-sm">
                 <div class="card-header">📅 Mes Récord</div>
                 <div class="card-body text-center">
                     <h3 class="card-title">@_dashboard.MesMasVentas</h3>

@@ -2,16 +2,17 @@
 
 <div class="page">
     <div class="sidebar">
-        <div class="top-logo">
-            <img src="/Waldos_logo.png" alt="Logo de Waldos" class="waldos-logo" />
-            <span class="app-title">Facturación App</span>
+        <div class="top-logo d-flex flex-column align-items-center justify-content-center pt-4 pb-3">
+            <img src="/Waldos_logo.png?v=201" alt="Logo Waldos" class="waldos-logo mb-2" />
+            <div class="waldos-title">Facturación de Waldos</div>
         </div>
+        
         <NavMenu />
     </div>
 
     <main>
         <div class="main-header px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">Sobre el Sistema</a>
+            <a href="#" class="text-dark text-decoration-none fw-bold">Sobre el Sistema</a>
         </div>
 
         <article class="content px-4">
@@ -28,98 +29,92 @@
 
 <style>
     /* ============================================== */
-    /* NUEVA PALETA: ESTILO WALDOS (VERDE Y ROJO)     */
+    /* ESTILO WALDOS FINAL (CORREGIDO)                */
     /* ============================================== */
 
     :root {
-        /* PALETA */
         --w-verde-principal: #008f39; 
         --w-rojo-principal: #D50000;
         --w-amarillo: #FFD700;
         --w-verde-lima: #76ff03;
         --w-vino-oscuro: #8a0000;
-        --w-verde-oscuro-tarjeta: #1b5e20; /* Color Tarjeta Ingresos */
-        --w-gris-neutro: #6c757d; /* Color Tarjeta Facturas */
+        --w-verde-oscuro-tarjeta: #1b5e20; 
     }
 
-    /* --- LOGO EN LA BARRA LATERAL --- */
+    /* --- 1. CABECERA LATERAL --- */
     .top-logo {
-        height: 3.5rem; 
-        background-color: #006020; 
-        display: flex;
-        align-items: center;
-        padding: 0 1rem;
-        border-bottom: 1px solid rgba(0,0,0,0.2);
-    }
-    .waldos-logo {
-        height: 2.5rem; 
-        margin-right: 0.5rem;
-    }
-    .app-title {
-        color: white;
-        font-weight: bold;
-        font-size: 1.2rem;
-        white-space: nowrap; 
+        background-color: transparent !important;
+        text-align: center;
     }
 
-    /* --- BARRA LATERAL (VERDE) --- */
+    .waldos-logo {
+        height: 7rem; 
+        width: auto;
+        object-fit: contain;
+        filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));
+    }
+
+    .waldos-title {
+        color: white;
+        font-weight: 800;
+        font-size: 1.3rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-align: center;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    }
+    
+    /* --- 2. BARRA LATERAL --- */
     .sidebar {
         background-image: linear-gradient(180deg, var(--w-verde-principal) 0%, #006020 100%) !important;
         color: white;
-        min-width: 250px;
+        min-width: 280px; 
     }
 
-    /* --- TARJETAS: SELECTORES MÁS FUERTES --- */
+    /* --- 3. CLASES DE TARJETAS (CORREGIDAS A VERDE/ROJO) --- */
     
-    /* 1. MEJOR CLIENTE (bg-primary) y BOTONES (btn-primary) */
-    .card.bg-primary, .btn-primary { /* Selector fuerte */
-        background-color: var(--w-rojo-principal) !important;
-        border-color: var(--w-vino-oscuro) !important;
-        color: white !important;
-    }
-
-    /* 2. INGRESOS TOTALES (bg-success) */
-    .card.bg-success { /* Selector fuerte */
+    /* Ingresos: VERDE OSCURO */
+    .card-waldos-ingresos {
         background-color: var(--w-verde-oscuro-tarjeta) !important;
         border-color: #0d4212 !important;
         color: white !important;
     }
     
-    /* 3. FACTURAS (bg-secondary) */
-    .card.bg-secondary { /* Selector fuerte */
-        background-color: var(--w-gris-neutro) !important;
-        border-color: #5a6268 !important;
+    /* Facturas: AHORA ES VERDE MEDIO (Ya no es Gris) */
+    .card-waldos-facturas { 
+        background-color: #388E3C !important; 
+        border-color: #1b5e20 !important;
         color: white !important;
     }
     
-    /* 4. MES RÉCORD (bg-info) */
-    .card.bg-info { /* Selector fuerte */
-        background-color: #0097a7 !important; 
-        border-color: #006064 !important;
+    /* Mejor Cliente: ROJO PRINCIPAL */
+    .card-waldos-cliente { 
+        background-color: var(--w-rojo-principal) !important;
+        border-color: var(--w-vino-oscuro) !important;
         color: white !important;
     }
     
-    /* 5. ARTÍCULO ESTRELLA (bg-warning) */
-    .card.bg-warning { /* Selector fuerte */
-        background-color: var(--w-amarillo) !important;
-        color: #212121 !important;
+    /* Mes Récord: AHORA ES ROJO BORGOÑA (Ya no es Turquesa) */
+    .card-waldos-record { 
+        background-color: #C62828 !important; 
+        border-color: #b71c1c !important;
+        color: white !important;
     }
 
-    /* --- ESTILOS ADICIONALES --- */
+    /* --- 4. BOTONES Y TEXTOS --- */
+    .btn-primary, .btn-primary:hover {
+        background-color: var(--w-rojo-principal) !important;
+        border-color: var(--w-vino-oscuro) !important;
+        color: white !important;
+    }
     .text-primary { color: var(--w-rojo-principal) !important; font-weight: bold; }
-    .btn-warning { background-color: var(--w-amarillo) !important; color: #212121 !important; }
-    .nav-item a.active {
-        background-color: rgba(0, 0, 0, 0.2) !important;
-        border-left: 5px solid var(--w-verde-lima) !important;
-        color: white !important;
-    }
+    .btn-warning, .card.bg-warning { background-color: var(--w-amarillo) !important; color: #212121 !important; }
+    .btn-success { background-color: var(--w-verde-principal) !important; border-color: #006020 !important; }
 
-
-    /* ============================================== */
-    /* ESTRUCTURA ORIGINAL                            */
-    /* ============================================== */
+    /* --- 5. ESTRUCTURA --- */
     .page { position: relative; display: flex; flex-direction: column; min-height: 100vh; }
     main { flex: 1; }
+    
     .main-header {
         background-color: #f7f7f7;
         border-bottom: 1px solid #d6d5d5;
@@ -128,10 +123,10 @@
         display: flex;
         align-items: center;
     }
-    .main-header a { margin-left: 1.5rem; text-decoration: none; color: black; }
+
     @@media (min-width: 641px) {
         .page { flex-direction: row; }
-        .sidebar { width: 250px; height: 100vh; position: sticky; top: 0; }
+        .sidebar { width: 280px; height: 100vh; position: sticky; top: 0; }
         .main-header { position: sticky; top: 0; z-index: 1; }
         .main-header, article { padding-left: 2rem !important; padding-right: 1.5rem !important; }
     }
@@ -140,4 +135,9 @@
         .sidebar { width: 100%; height: auto; }
     }
     .nav-item a { border-radius: 4px; height: 3rem; display: flex; align-items: center; line-height: 3rem; text-decoration: none; padding-left: 1rem; margin: 0 10px; }
+    .nav-item a.active {
+        background-color: rgba(0, 0, 0, 0.2) !important;
+        border-left: 5px solid var(--w-verde-lima) !important;
+        color: white !important;
+    }
 </style>
