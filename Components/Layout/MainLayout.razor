@@ -11,11 +11,8 @@
     </div>
 
     <main>
-        <div class="main-header px-4">
-            <a href="#" class="text-dark text-decoration-none fw-bold">Sobre el Sistema</a>
-        </div>
 
-        <article class="content px-4">
+        <article class="content px-4 py-4">
             @Body
         </article>
     </main>
@@ -29,8 +26,12 @@
 
 <style>
     /* ============================================== */
-    /* ESTILO WALDOS FINAL (CORREGIDO)                */
+    /* ESTILO WALDOS FINAL               */
     /* ============================================== */
+
+    #blazor-error-ui {
+        display: none !important;
+    }
 
     :root {
         --w-verde-principal: #008f39; 
@@ -71,7 +72,7 @@
         min-width: 280px; 
     }
 
-    /* --- 3. CLASES DE TARJETAS (CORREGIDAS A VERDE/ROJO) --- */
+    /* --- 3. CLASES DE TARJETAS  --- */
     
     /* Ingresos: VERDE OSCURO */
     .card-waldos-ingresos {
@@ -80,7 +81,7 @@
         color: white !important;
     }
     
-    /* Facturas: AHORA ES VERDE MEDIO (Ya no es Gris) */
+    /* Facturas: AHORA ES VERDE MEDIO */
     .card-waldos-facturas { 
         background-color: #388E3C !important; 
         border-color: #1b5e20 !important;
@@ -113,7 +114,7 @@
 
     /* --- 5. ESTRUCTURA --- */
     .page { position: relative; display: flex; flex-direction: column; min-height: 100vh; }
-    main { flex: 1; }
+    main { flex: 1; background-color: #f8f9fa; }
     
     .main-header {
         background-color: #f7f7f7;

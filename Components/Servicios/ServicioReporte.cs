@@ -24,8 +24,8 @@ namespace blazerFacturacion.Components.Servicios
             {
                 await conexion.OpenAsync();
 
-                // 1. TOTAL INGRESOS
-                var sqlIngresos = "SELECT SUM(Total) FROM Facturas";
+                // 1. TOTAL INGRESOS 
+                var sqlIngresos = "SELECT SUM(Total) FROM Facturas WHERE Archivada = 0"; // WHERE Archivada es para checar si esta archivada o no
                 using (var comando = new SqliteCommand(sqlIngresos, conexion))
                 {
                     var resultado = await comando.ExecuteScalarAsync();
@@ -35,19 +35,21 @@ namespace blazerFacturacion.Components.Servicios
                     }
                 }
 
-                // 2. TOTAL FACTURAS EMITIDAS
-                var sqlConteo = "SELECT COUNT(*) FROM Facturas";
+                // 2. TOTAL FACTURAS EMITIDAS 
+                var sqlConteo = "SELECT COUNT(*) FROM Facturas WHERE Archivada = 0";
                 using (var comando = new SqliteCommand(sqlConteo, conexion))
                 {
                     info.TotalFacturas = Convert.ToInt32(await comando.ExecuteScalarAsync());
                 }
 
-                // 3. ARTÍCULO MÁS VENDIDO (Por cantidad)
+                // 3. ARTÍCULO MÁS VENDIDO 
                 var sqlArticulo = @"
-                    SELECT Nombre 
-                    FROM ArticulosFactura 
-                    GROUP BY Nombre 
-                    ORDER BY SUM(Cantidad) DESC 
+                    SELECT af.Nombre 
+                    FROM ArticulosFactura af
+                    JOIN Facturas f ON af.FacturaId = f.Id
+                    WHERE f.Archivada = 0
+                    GROUP BY af.Nombre 
+                    ORDER BY SUM(af.Cantidad) DESC 
                     LIMIT 1";
                 using (var comando = new SqliteCommand(sqlArticulo, conexion))
                 {
@@ -55,10 +57,11 @@ namespace blazerFacturacion.Components.Servicios
                     if (resultado != null) info.ArticuloMasVendido = resultado.ToString();
                 }
 
-                // 4. CLIENTE BALLENA (El que más ha gastado)
+                // 4. CLIENTE BALLENA 
                 var sqlCliente = @"
                     SELECT NombreCliente 
                     FROM Facturas 
+                    WHERE Archivada = 0
                     GROUP BY NombreCliente 
                     ORDER BY SUM(Total) DESC 
                     LIMIT 1";
@@ -68,11 +71,11 @@ namespace blazerFacturacion.Components.Servicios
                     if (resultado != null) info.ClienteEstrella = resultado.ToString();
                 }
 
-                // 5. MEJOR MES (Mes con más ingresos)
-                // Usamos strftime para agrupar por mes numérico ('01', '02')
+                // 5. MEJOR MES 
                 var sqlMes = @"
                     SELECT strftime('%m', Fecha) 
                     FROM Facturas 
+                    WHERE Archivada = 0
                     GROUP BY strftime('%m', Fecha) 
                     ORDER BY SUM(Total) DESC 
                     LIMIT 1";
