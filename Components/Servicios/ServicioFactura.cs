@@ -294,7 +294,7 @@ namespace blazerFacturacion.Components.Servicios
             }
         }
 
-        // --- OBTENER SOLO ARCHIVADAS ---
+        // OBTENER SOLO ARCHIVADAS
         public async Task<List<Factura>> GetFacturasArchivadasAsync()
         {
             var listaFacturas = new List<Factura>();
@@ -302,11 +302,10 @@ namespace blazerFacturacion.Components.Servicios
             {
                 await conexion.OpenAsync();
 
-                // SOLO LAS QUE TIENEN Archivada = 1
                 var sql = @"SELECT Id, NombreCliente, Fecha, Total, Archivada 
-                            FROM Facturas 
-                            WHERE Archivada = 1
-                            ORDER BY Fecha DESC";
+                    FROM Facturas 
+                    WHERE Archivada = 1
+                    ORDER BY Fecha DESC";
 
                 using (var comando = new SqliteCommand(sql, conexion))
                 {
@@ -320,8 +319,36 @@ namespace blazerFacturacion.Components.Servicios
                                 NombreCliente = lector.GetString(1),
                                 Fecha = DateTime.Parse(lector.GetString(2)),
                                 Total = lector.GetDecimal(3),
-                                Archivada = lector.GetBoolean(4)
+                                Archivada = lector.GetBoolean(4),
+                                Articulos = new List<ArticuloFactura>() 
                             });
+                        }
+                    }
+                }
+
+                // Cargar Artículos para cada factura archivada
+                foreach (var factura in listaFacturas)
+                {
+                    var sqlArticulos = @"SELECT ArticuloId, Nombre, Cantidad, PrecioUnitario, FacturaId 
+                                 FROM ArticulosFactura 
+                                 WHERE FacturaId = @id";
+
+                    using (var cmdArt = new SqliteCommand(sqlArticulos, conexion))
+                    {
+                        cmdArt.Parameters.AddWithValue("@id", factura.Id);
+                        using (var lectorArt = await cmdArt.ExecuteReaderAsync())
+                        {
+                            while (await lectorArt.ReadAsync())
+                            {
+                                factura.Articulos.Add(new ArticuloFactura
+                                {
+                                    ArticuloId = lectorArt.GetInt32(0),
+                                    Nombre = lectorArt.GetString(1),
+                                    Cantidad = lectorArt.GetInt32(2),
+                                    PrecioUnitario = lectorArt.GetDecimal(3),
+                                    FacturaId = lectorArt.GetInt32(4)
+                                });
+                            }
                         }
                     }
                 }

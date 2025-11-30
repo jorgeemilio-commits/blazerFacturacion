@@ -12,7 +12,7 @@
         padding: 30px;
     }
     .text-factura-archivada {
-        color: #881600; 
+        color: #D50000;
         font-weight: bold;
     }
 </style>
@@ -25,36 +25,49 @@
     @if (_accesoConcedido)
     {
         <div class="card p-4 shadow-sm border-0" style="border-top: 5px solid #D50000;">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="text-secondary m-0">Facturas Ocultas (@_facturasArchivadas.Count)</h4>
+            </div>
             
             @if (_facturasArchivadas.Any())
             {
-                <table class="table table-bordered table-striped table-hover align-middle">
-                    <thead class="table-danger text-white">
-                        <tr>
-                            <th>ID</th>
-                            <th>Cliente</th>
-                            <th>Fecha</th>
-                            <th>Total</th>
-                            <th width="15%">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var factura in _facturasArchivadas)
-                        {
-                            <tr>
-                                <td>#@factura.Id</td>
-                                <td>@factura.NombreCliente</td>
-                                <td>@factura.Fecha.ToShortDateString()</td>
-                                <td>@factura.Total.ToString("C")</td>
-                                <td>
-                                    <button class="btn btn-sm btn-success w-100" @onclick="() => DesarchivarFactura(factura.Id)">
-                                        🔓 Desarchivar
-                                    </button>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                <div class="accordion" id="archivadosAccordion">
+                    @foreach (var facturaHist in _facturasArchivadas)
+                    {
+                        <div class="accordion-item border-danger">
+                            <h2 class="accordion-header" id="heading-@facturaHist.Id">
+                                <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@facturaHist.Id">
+                                    <div class="d-flex w-100 justify-content-between me-3">
+                                        <span>📜 #@facturaHist.Id - @facturaHist.NombreCliente (@facturaHist.Fecha.ToShortDateString())</span>
+                                        <span class="text-danger">@facturaHist.Total.ToString("C")</span>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse-@facturaHist.Id" class="accordion-collapse collapse" data-bs-parent="#archivadosAccordion">
+                                <div class="accordion-body bg-light">
+                                    <h6 class="text-muted border-bottom pb-2">Artículos archivados:</h6>
+                                    
+                                    <ul class="list-group mb-3">
+                                        @foreach (var artHist in facturaHist.Articulos)
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                @artHist.Nombre 
+                                                <span class="badge bg-secondary rounded-pill">@artHist.Cantidad x @artHist.PrecioUnitario.ToString("C")</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                    
+                                    <div class="d-flex justify-content-end">
+                                        <button class="btn btn-success fw-bold" @onclick="() => DesarchivarFactura(facturaHist.Id)">
+                                            🔓 Desarchivar y Restaurar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
             }
             else
             {
@@ -86,13 +99,14 @@
 @code {
     private const string PASSWORD_SECRETA = "Medel2025";
     private string _passwordInput = string.Empty;
-    private bool _accesoConcedido = false;
     private string _mensajeError = string.Empty;
+    private bool _accesoConcedido = false; 
+    
     private List<Factura> _facturasArchivadas = new List<Factura>();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _accesoConcedido = false; 
+        // El acceso solo se concede al ingresar la contraseña.
     }
 
     private async Task VerificarPassword()
@@ -118,16 +132,15 @@
     private async Task DesarchivarFactura(int idFactura)
     {
         var confirmacion = await JSRuntime.InvokeAsync<bool>("confirm", 
-            "¿Confirmar la acción? Esta factura volverá a aparecer en todos los reportes.");
+            "¿Confirmar la acción? Esta factura volverá a aparecer en todos los reportes y será visible en el Dashboard.");
         
         if (confirmacion)
         {
-            // Llama al servicio para alternar el estado a 'false' (no archivada)
             await ServicioFactura.AlternarArchivoFacturaAsync(idFactura, false);
             
-            // Recargar la lista para ver el cambio
+            // Recargar la lista
             await CargarFacturasArchivadas();
+            await JSRuntime.InvokeVoidAsync("alert", $"Factura #{idFactura} desarchivada exitosamente.");
         }
     }
-
 }
