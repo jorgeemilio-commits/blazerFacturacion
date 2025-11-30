@@ -7,17 +7,21 @@
 @inject IJSRuntime JSRuntime
 
 <style>
+    /* Estilos basados en la paleta Waldos (Rojo y Verde) */
     .header-reporte { background-color: #008f39 !important; color: white !important; }
     .total-anual-row { background-color: #D50000 !important; color: white !important; font-weight: bold; }
+    .text-primary { color: #D50000 !important; }
     
-    /* Estilos para modo edición */
+    /* Estilos para modo edición de filas */
     .bg-editing-row { background-color: #fff3cd !important; }
+    .accordion-button { font-weight: bold; } 
 </style>
 
 <main class="container">
 
+    <!-- SECCIÓN DE HISTORIAL Y EDICIÓN -->
     <div class="card p-4 mb-4 shadow-sm" style="border-top: 5px solid #D50000;">
-        <h3 class="mb-3 text-primary">🔎 Historial de Facturas</h3>
+        <h3 class="mb-3 text-primary">🔎 Historial de Facturas (Activas)</h3>
         
         <div class="input-group mb-3">
             <span class="input-group-text fw-bold">Cliente:</span>
@@ -32,7 +36,7 @@
                 {
                     <div class="accordion-item border-success">
                         <h2 class="accordion-header" id="heading-@facturaHist.Id">
-                            <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@facturaHist.Id">
+                            <button class="accordion-button collapsed text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@facturaHist.Id">
                                 <div class="d-flex w-100 justify-content-between me-3">
                                     <span>🧾 Factura #@facturaHist.Id - <small class="text-muted">@facturaHist.Fecha.ToShortDateString()</small></span>
                                     <span class="text-success">@facturaHist.Total.ToString("C")</span>
@@ -44,12 +48,14 @@
                                 
                                 @if (_facturaEnEdicionId == facturaHist.Id)
                                 {
+                                    <!-- MODO EDICIÓN COMPLETA (CABECERA Y ARTÍCULOS) -->
                                     <div class="card p-3 border-warning mb-3">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <h6 class="text-warning fw-bold m-0">✏️ Editar Cabecera</h6>
+                                            <h6 class="text-warning fw-bold m-0">✏️ Edición Activa</h6>
                                             <button class="btn btn-sm btn-secondary" @onclick="CancelarEdicion">Cerrar Edición</button>
                                         </div>
 
+                                        <!-- 1. Editar Cabecera (Cliente/Fecha) -->
                                         <EditForm Model="_facturaParaEditar" OnValidSubmit="() => GuardarEdicionCabeceraAsync(facturaHist.Id)">
                                             <DataAnnotationsValidator />
                                             <div class="row g-2 align-items-end">
@@ -69,6 +75,7 @@
 
                                         <hr />
 
+                                        <!-- 2. Gestión de Artículos -->
                                         <h6 class="text-muted fw-bold mb-2">📦 Gestión de Artículos</h6>
                                         <table class="table table-sm table-bordered bg-white text-center align-middle">
                                             <thead class="table-light">
@@ -84,6 +91,7 @@
                                                 {
                                                     @if (_articuloEnEdicionId == art.ArticuloId)
                                                     {
+                                                        <!-- Fila en Edición -->
                                                         <tr class="bg-editing-row">
                                                             <td><input class="form-control form-control-sm" @bind="_articuloEditando.Nombre" /></td>
                                                             <td><input type="number" class="form-control form-control-sm" @bind="_articuloEditando.Cantidad" /></td>
@@ -96,6 +104,7 @@
                                                     }
                                                     else
                                                     {
+                                                        <!-- Fila Normal -->
                                                         <tr>
                                                             <td class="text-start ps-3">@art.Nombre</td>
                                                             <td>@art.Cantidad</td>
@@ -108,6 +117,7 @@
                                                     }
                                                 }
                                                 
+                                                <!-- Fila para Agregar Nuevo Artículo -->
                                                 <tr class="table-info">
                                                     <td><input class="form-control form-control-sm" placeholder="Nuevo..." @bind="_articuloNuevo.Nombre" /></td>
                                                     <td><input type="number" class="form-control form-control-sm" placeholder="1" @bind="_articuloNuevo.Cantidad" /></td>
@@ -122,6 +132,7 @@
                                 }
                                 else 
                                 {
+                                    <!-- MODO VISUALIZACIÓN -->
                                     <h6 class="text-muted border-bottom pb-2">Artículos:</h6>
                                     <ul class="list-group mb-3">
                                         @foreach (var artHist in facturaHist.Articulos)
@@ -137,8 +148,11 @@
                                         <button class="btn btn-sm btn-outline-warning" @onclick="() => IniciarEdicion(facturaHist)">
                                             ✏️ Editar Factura Completa
                                         </button>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => ArchivarFactura(facturaHist.Id)">
+                                            <span class="bi bi-lock-fill"></span> Archivar
+                                        </button>
                                         <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarEliminacion(facturaHist.Id)">
-                                            🗑️ Eliminar Factura
+                                            🗑️ Eliminar
                                         </button>
                                     </div>
                                 }
@@ -156,6 +170,7 @@
         }
     </div>
 
+    <!-- SECCIÓN DE REPORTE ANUAL -->
     <div class="card p-4 shadow-sm" style="border-top: 5px solid #008f39;">
         <h3 class="mb-3 text-success">📊 Reporte Anual</h3>
 
@@ -223,6 +238,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // El dashboard no necesita recargarse aquí, se hace en el Home.razor si fuera necesario.
+        // Solo cargamos el historial si había una búsqueda previa.
         _nombreClienteBusqueda = ControladorFactura.NombreClienteActual;
         _nombreClienteAnual = ControladorFactura.NombreClienteActual;
         
@@ -240,17 +257,16 @@
             return;
         }
         ControladorFactura.NombreClienteActual = _nombreClienteBusqueda;
+        // Usa el servicio, que ya filtra por Archivada = 0
         _historialFacturas = await ServicioFactura.GetFacturasPorClienteAsync(_nombreClienteBusqueda);
     }
 
     // --- Métodos de Edición de Factura (Cabecera) ---
     private void IniciarEdicion(Factura factura)
     {
-        // Copia para editar cabecera
         _facturaParaEditar = new Factura { Id = factura.Id, NombreCliente = factura.NombreCliente, Fecha = factura.Fecha };
         _facturaEnEdicionId = factura.Id;
         
-        // Reset variables de artículos
         _articuloEnEdicionId = null;
         _articuloNuevo = new ArticuloFactura();
     }
@@ -265,7 +281,6 @@
     private async Task GuardarEdicionCabeceraAsync(int facturaId)
     {
         await ServicioFactura.ActualizarFacturaAsync(facturaId, _facturaParaEditar.NombreCliente, _facturaParaEditar.Fecha);
-        // Nota: No cerramos la edición para que el usuario pueda seguir editando artículos si quiere
         await BuscarHistorial(); // Refrescar para ver cambios
     }
 
@@ -278,6 +293,22 @@
             await BuscarHistorial();
         }
     }
+    
+    // --- NUEVO: Archivar Factura ---
+    private async Task ArchivarFactura(int idFactura)
+    {
+        var confirmacion = await JSRuntime.InvokeAsync<bool>("confirm", 
+            "⚠️ ¿Archivar esta factura? Se ocultará de todos los reportes y del Dashboard. Se podrá ver en 'Archivados'.");
+        
+        if (confirmacion)
+        {
+            // Archivar (estado = true)
+            await ServicioFactura.AlternarArchivoFacturaAsync(idFactura, true);
+            await BuscarHistorial(); // Refrescar la lista (la factura archivada desaparecerá)
+            await JSRuntime.InvokeVoidAsync("alert", $"Factura #{idFactura} archivada exitosamente.");
+        }
+    }
+
 
     // --- MÉTODOS DE GESTIÓN DE ARTÍCULOS ---
 
@@ -288,7 +319,6 @@
         _articuloNuevo.FacturaId = facturaId;
         await ServicioFactura.AgregarArticuloAsync(_articuloNuevo);
         
-        // Limpiar y recargar
         _articuloNuevo = new ArticuloFactura();
         await BuscarHistorial();
     }
@@ -296,7 +326,6 @@
     private void IniciarEdicionArticulo(ArticuloFactura art)
     {
         _articuloEnEdicionId = art.ArticuloId;
-        // Clonar para no editar directo en la lista hasta guardar
         _articuloEditando = new ArticuloFactura 
         { 
             ArticuloId = art.ArticuloId, 

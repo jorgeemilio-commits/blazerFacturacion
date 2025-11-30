@@ -1,5 +1,133 @@
-﻿<h3>Archivados</h3>
+﻿@page "/archivados"
+@rendermode InteractiveServer
+
+@using blazerFacturacion.Components.Data
+@inject ServicioFactura ServicioFactura
+@inject IJSRuntime JSRuntime
+
+<style>
+    .lock-card {
+        max-width: 500px;
+        margin: 100px auto;
+        padding: 30px;
+    }
+    .text-factura-archivada {
+        color: #881600; 
+        font-weight: bold;
+    }
+</style>
+
+<div class="container">
+    <h1 class="text-factura-archivada display-5 mb-4">
+        <span class="bi bi-lock-fill"></span> Gestión de Facturas Archivadas
+    </h1>
+
+    @if (_accesoConcedido)
+    {
+        <div class="card p-4 shadow-sm border-0" style="border-top: 5px solid #D50000;">
+            
+            @if (_facturasArchivadas.Any())
+            {
+                <table class="table table-bordered table-striped table-hover align-middle">
+                    <thead class="table-danger text-white">
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th width="15%">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var factura in _facturasArchivadas)
+                        {
+                            <tr>
+                                <td>#@factura.Id</td>
+                                <td>@factura.NombreCliente</td>
+                                <td>@factura.Fecha.ToShortDateString()</td>
+                                <td>@factura.Total.ToString("C")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-success w-100" @onclick="() => DesarchivarFactura(factura.Id)">
+                                        🔓 Desarchivar
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-info text-center">
+                    No hay facturas archivadas en este momento.
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card lock-card shadow-lg border-danger">
+            <h4 class="text-danger mb-4">🔑 Ingrese Contraseña</h4>
+            <p class="text-muted">La contraseña es requerida para gestionar los archivos.</p>
+
+            <InputText type="password" class="form-control form-control-lg mb-3" 
+                   placeholder="Contraseña" @bind-Value="_passwordInput" />
+            
+            @if (!string.IsNullOrEmpty(_mensajeError))
+            {
+                <div class="alert alert-danger py-2">@_mensajeError</div>
+            }
+
+            <button class="btn btn-danger btn-lg w-100" @onclick="VerificarPassword">Acceder</button>
+        </div>
+    }
+</div>
 
 @code {
+    private const string PASSWORD_SECRETA = "Medel2025";
+    private string _passwordInput = string.Empty;
+    private bool _accesoConcedido = false;
+    private string _mensajeError = string.Empty;
+    private List<Factura> _facturasArchivadas = new List<Factura>();
+
+    protected override void OnInitialized()
+    {
+        _accesoConcedido = false; 
+    }
+
+    private async Task VerificarPassword()
+    {
+        _mensajeError = string.Empty;
+        if (_passwordInput == PASSWORD_SECRETA)
+        {
+            _accesoConcedido = true;
+            await CargarFacturasArchivadas();
+        }
+        else
+        {
+            _mensajeError = "Contraseña incorrecta. Intente de nuevo.";
+            _passwordInput = string.Empty;
+        }
+    }
+
+    private async Task CargarFacturasArchivadas()
+    {
+        _facturasArchivadas = await ServicioFactura.GetFacturasArchivadasAsync();
+    }
+
+    private async Task DesarchivarFactura(int idFactura)
+    {
+        var confirmacion = await JSRuntime.InvokeAsync<bool>("confirm", 
+            "¿Confirmar la acción? Esta factura volverá a aparecer en todos los reportes.");
+        
+        if (confirmacion)
+        {
+            // Llama al servicio para alternar el estado a 'false' (no archivada)
+            await ServicioFactura.AlternarArchivoFacturaAsync(idFactura, false);
+            
+            // Recargar la lista para ver el cambio
+            await CargarFacturasArchivadas();
+        }
+    }
 
 }
