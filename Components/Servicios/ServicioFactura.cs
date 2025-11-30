@@ -17,16 +17,17 @@ namespace blazerFacturacion.Components.Servicios
             _cadenaConexion = configuracion.GetConnectionString("DefaultConnection");
         }
 
-        // --- MÉTODOS EXISTENTES (Guardar, Leer, Eliminar Factura Completa) ---
+        // --- MÉTODOS DE ESCRITURA ---
 
         public async Task GuardarFacturaAsync(Factura nuevaFactura)
         {
             using (var conexion = new SqliteConnection(_cadenaConexion))
             {
                 await conexion.OpenAsync();
+                // Por defecto Archivada es 0 (false)
                 var sqlFactura = @"
-                    INSERT INTO Facturas (NombreCliente, Fecha, Total) 
-                    VALUES (@nombre, @fecha, @total);
+                    INSERT INTO Facturas (NombreCliente, Fecha, Total, Archivada) 
+                    VALUES (@nombre, @fecha, @total, 0);
                     SELECT last_insert_rowid();";
 
                 int idFacturaGenerado = 0;
@@ -59,6 +60,8 @@ namespace blazerFacturacion.Components.Servicios
             }
         }
 
+        // --- MÉTODOS DE LECTURA ---
+
         public async Task<List<Factura>> GetFacturasPorClienteAsync(string nombreCliente)
         {
             var listaFacturas = new List<Factura>();
@@ -67,9 +70,11 @@ namespace blazerFacturacion.Components.Servicios
             using (var conexion = new SqliteConnection(_cadenaConexion))
             {
                 await conexion.OpenAsync();
-                var sql = @"SELECT Id, NombreCliente, Fecha, Total 
+
+                var sql = @"SELECT Id, NombreCliente, Fecha, Total, Archivada 
                             FROM Facturas 
                             WHERE UPPER(NombreCliente) = UPPER(@nombre) 
+                            AND Archivada = 0
                             ORDER BY Fecha DESC";
 
                 using (var comando = new SqliteCommand(sql, conexion))
@@ -85,12 +90,14 @@ namespace blazerFacturacion.Components.Servicios
                                 NombreCliente = lector.GetString(1),
                                 Fecha = DateTime.Parse(lector.GetString(2)),
                                 Total = lector.GetDecimal(3),
+                                Archivada = lector.GetBoolean(4),
                                 Articulos = new List<ArticuloFactura>()
                             });
                         }
                     }
                 }
 
+                // Cargar artículos 
                 foreach (var factura in listaFacturas)
                 {
                     var sqlArticulos = @"SELECT ArticuloId, Nombre, Cantidad, PrecioUnitario, FacturaId 
@@ -119,6 +126,46 @@ namespace blazerFacturacion.Components.Servicios
             }
             return listaFacturas;
         }
+
+        public async Task<List<Factura>> GetFacturasPorAnioAsync(string nombreCliente, int anio)
+        {
+            var lista = new List<Factura>();
+            if (string.IsNullOrWhiteSpace(nombreCliente)) return lista;
+
+            using (var conexion = new SqliteConnection(_cadenaConexion))
+            {
+                await conexion.OpenAsync();
+
+                var sql = @"SELECT Id, NombreCliente, Fecha, Total 
+                            FROM Facturas 
+                            WHERE UPPER(NombreCliente) = UPPER(@nombre) 
+                            AND strftime('%Y', Fecha) = @anio 
+                            AND Archivada = 0
+                            ORDER BY Fecha ASC";
+
+                using (var comando = new SqliteCommand(sql, conexion))
+                {
+                    comando.Parameters.AddWithValue("@nombre", nombreCliente);
+                    comando.Parameters.AddWithValue("@anio", anio.ToString());
+                    using (var lector = await comando.ExecuteReaderAsync())
+                    {
+                        while (await lector.ReadAsync())
+                        {
+                            lista.Add(new Factura
+                            {
+                                Id = lector.GetInt32(0),
+                                NombreCliente = lector.GetString(1),
+                                Fecha = DateTime.Parse(lector.GetString(2)),
+                                Total = lector.GetDecimal(3)
+                            });
+                        }
+                    }
+                }
+            }
+            return lista;
+        }
+
+        // --- OTROS MÉTODOS (Actualizar, Eliminar, etc.) ---
 
         public async Task ActualizarFacturaAsync(int idFactura, string nuevoNombre, DateTime nuevaFecha)
         {
@@ -156,44 +203,7 @@ namespace blazerFacturacion.Components.Servicios
             }
         }
 
-        public async Task<List<Factura>> GetFacturasPorAnioAsync(string nombreCliente, int anio)
-        {
-            var lista = new List<Factura>();
-            if (string.IsNullOrWhiteSpace(nombreCliente)) return lista;
-
-            using (var conexion = new SqliteConnection(_cadenaConexion))
-            {
-                await conexion.OpenAsync();
-                var sql = @"SELECT Id, NombreCliente, Fecha, Total 
-                            FROM Facturas 
-                            WHERE UPPER(NombreCliente) = UPPER(@nombre) 
-                            AND strftime('%Y', Fecha) = @anio 
-                            ORDER BY Fecha ASC";
-
-                using (var comando = new SqliteCommand(sql, conexion))
-                {
-                    comando.Parameters.AddWithValue("@nombre", nombreCliente);
-                    comando.Parameters.AddWithValue("@anio", anio.ToString());
-                    using (var lector = await comando.ExecuteReaderAsync())
-                    {
-                        while (await lector.ReadAsync())
-                        {
-                            lista.Add(new Factura
-                            {
-                                Id = lector.GetInt32(0),
-                                NombreCliente = lector.GetString(1),
-                                Fecha = DateTime.Parse(lector.GetString(2)),
-                                Total = lector.GetDecimal(3)
-                            });
-                        }
-                    }
-                }
-            }
-            return lista;
-        }
-
-        // --- NUEVOS MÉTODOS PARA EDITAR ARTÍCULOS ---
-
+        // Métodos de Artículos (Agregar, Actualizar, Eliminar, Recalcular)
         public async Task AgregarArticuloAsync(ArticuloFactura articulo)
         {
             using (var conexion = new SqliteConnection(_cadenaConexion))
@@ -201,7 +211,6 @@ namespace blazerFacturacion.Components.Servicios
                 await conexion.OpenAsync();
                 var sql = @"INSERT INTO ArticulosFactura (Nombre, Cantidad, PrecioUnitario, FacturaId) 
                             VALUES (@nombre, @cant, @precio, @idFactura)";
-
                 using (var comando = new SqliteCommand(sql, conexion))
                 {
                     comando.Parameters.AddWithValue("@nombre", articulo.Nombre);
@@ -222,7 +231,6 @@ namespace blazerFacturacion.Components.Servicios
                 var sql = @"UPDATE ArticulosFactura 
                             SET Nombre = @nombre, Cantidad = @cant, PrecioUnitario = @precio 
                             WHERE ArticuloId = @id";
-
                 using (var comando = new SqliteCommand(sql, conexion))
                 {
                     comando.Parameters.AddWithValue("@nombre", articulo.Nombre);
@@ -255,7 +263,6 @@ namespace blazerFacturacion.Components.Servicios
             using (var conexion = new SqliteConnection(_cadenaConexion))
             {
                 await conexion.OpenAsync();
-                // Calcula el nuevo total sumando los artículos existentes
                 var sql = @"UPDATE Facturas 
                             SET Total = (
                                 SELECT COALESCE(SUM(Cantidad * PrecioUnitario), 0) 
@@ -263,13 +270,63 @@ namespace blazerFacturacion.Components.Servicios
                                 WHERE FacturaId = @id
                             )
                             WHERE Id = @id";
-
                 using (var comando = new SqliteCommand(sql, conexion))
                 {
                     comando.Parameters.AddWithValue("@id", idFactura);
                     await comando.ExecuteNonQueryAsync();
                 }
             }
+        }
+
+        // --- MÉTODO PARA ARCHIVAR/DESARCHIVAR ---
+        public async Task AlternarArchivoFacturaAsync(int idFactura, bool archivar)
+        {
+            using (var conexion = new SqliteConnection(_cadenaConexion))
+            {
+                await conexion.OpenAsync();
+                var sql = "UPDATE Facturas SET Archivada = @estado WHERE Id = @id";
+                using (var comando = new SqliteCommand(sql, conexion))
+                {
+                    comando.Parameters.AddWithValue("@estado", archivar ? 1 : 0);
+                    comando.Parameters.AddWithValue("@id", idFactura);
+                    await comando.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        // --- OBTENER SOLO ARCHIVADAS ---
+        public async Task<List<Factura>> GetFacturasArchivadasAsync()
+        {
+            var listaFacturas = new List<Factura>();
+            using (var conexion = new SqliteConnection(_cadenaConexion))
+            {
+                await conexion.OpenAsync();
+
+                // SOLO LAS QUE TIENEN Archivada = 1
+                var sql = @"SELECT Id, NombreCliente, Fecha, Total, Archivada 
+                            FROM Facturas 
+                            WHERE Archivada = 1
+                            ORDER BY Fecha DESC";
+
+                using (var comando = new SqliteCommand(sql, conexion))
+                {
+                    using (var lector = await comando.ExecuteReaderAsync())
+                    {
+                        while (await lector.ReadAsync())
+                        {
+                            listaFacturas.Add(new Factura
+                            {
+                                Id = lector.GetInt32(0),
+                                NombreCliente = lector.GetString(1),
+                                Fecha = DateTime.Parse(lector.GetString(2)),
+                                Total = lector.GetDecimal(3),
+                                Archivada = lector.GetBoolean(4)
+                            });
+                        }
+                    }
+                }
+            }
+            return listaFacturas;
         }
     }
 }
